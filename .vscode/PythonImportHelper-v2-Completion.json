@@ -351,6 +351,14 @@
         "documentation": {}
     },
     {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "APIKeyHeader",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -490,7 +498,7 @@
         "kind": 6,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "class OpenAITTSRequest(BaseModel):\n    model: str\n    input: str\n    voice: str\n    instructions: Optional[str] = None\n    response_format: Optional[str] = \"wav\"\n# --- Utility Functions ---\ndef create_wave_header(sample_rate, num_channels=1, bits_per_sample=16, data_size=0):\n    \"\"\"Create a wave header for streaming. data_size=0 means unknown size.\"\"\"\n    buffer = io.BytesIO()",
+        "peekOfCode": "class OpenAITTSRequest(BaseModel):\n    model: str\n    input: str\n    voice: str\n    instructions: Optional[str] = None\n    response_format: Optional[str] = \"wav\"\n# --- Authentication ---\nAPI_KEY_NAME = \"Authorization\"\nAPI_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)\nSERVER_API_KEY = os.getenv(\"API_KEY\")",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -508,7 +516,7 @@
         "kind": 2,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "def process_chunk(chunk_text: str, model: F5TTSWrapper, request: TTSRequest) -> Optional[bytes]:\n    \"\"\"Process a single text chunk and return raw audio bytes (int16)\"\"\"\n    chunk_text = TTSnorm(chunk_text).strip()\n    chunk_text = chunk_text.strip()\n    if not chunk_text:\n        return None\n    if chunk_text.endswith(\"..\"):\n        chunk_text = chunk_text[:-1].strip()\n    if not chunk_text:\n        return None",
+        "peekOfCode": "def process_chunk(chunk_text: str, model: F5TTSWrapper, request: TTSRequest) -> Optional[bytes]:\n    \"\"\"Process a single text chunk and return raw audio bytes (int16)\"\"\"\n    chunk_text = TTSnorm(chunk_text).strip()\n    if not chunk_text or chunk_text == \".\":\n        return None\n    if chunk_text.endswith(\"..\"):\n        chunk_text = chunk_text[:-1].strip()\n    if not chunk_text:\n        return None\n    print(f\"  Synthesizing chunk: '{chunk_text}'\")",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -535,7 +543,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "CUSTOM_REF_PATH = \"./references\"\nTEXT_SPLITTER_CHUNK_SIZE = 100\nTEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables (will be initialized during startup)\nDEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32",
+        "peekOfCode": "CUSTOM_REF_PATH = \"./references\"\nTEXT_SPLITTER_CHUNK_SIZE = 100\nTEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables\nDEFAULT_SAMPLE_RATE = 24000\ntts_model: Optional[F5TTSWrapper] = None\nreference_cache: Dict[str, Dict[str, Any]] = {}\nos.makedirs(CUSTOM_REF_PATH, exist_ok=True)\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -544,7 +552,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "TEXT_SPLITTER_CHUNK_SIZE = 100\nTEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables (will be initialized during startup)\nDEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0",
+        "peekOfCode": "TEXT_SPLITTER_CHUNK_SIZE = 100\nTEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables\nDEFAULT_SAMPLE_RATE = 24000\ntts_model: Optional[F5TTSWrapper] = None\nreference_cache: Dict[str, Dict[str, Any]] = {}\nos.makedirs(CUSTOM_REF_PATH, exist_ok=True)\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -553,7 +561,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "TEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables (will be initialized during startup)\nDEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0\n    speed: float = 1.0",
+        "peekOfCode": "TEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables\nDEFAULT_SAMPLE_RATE = 24000\ntts_model: Optional[F5TTSWrapper] = None\nreference_cache: Dict[str, Dict[str, Any]] = {}\nos.makedirs(CUSTOM_REF_PATH, exist_ok=True)\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -562,16 +570,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "DEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0\n    speed: float = 1.0\n    cross_fade_duration: float = 0.15\n    sway_sampling_coef: float = -1.0",
-        "detail": "tts_server",
-        "documentation": {}
-    },
-    {
-        "label": "app",
-        "kind": 5,
-        "importPath": "tts_server",
-        "description": "tts_server",
-        "peekOfCode": "app = FastAPI(title=\"Unified F5TTS + OpenAI Compatible TTS Server\")\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\nAPI_KEY_NAME = \"Authorization\"\nAPI_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)",
+        "peekOfCode": "DEFAULT_SAMPLE_RATE = 24000\ntts_model: Optional[F5TTSWrapper] = None\nreference_cache: Dict[str, Dict[str, Any]] = {}\nos.makedirs(CUSTOM_REF_PATH, exist_ok=True)\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -580,7 +579,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "API_KEY_NAME = \"Authorization\"\nAPI_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)\nSERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    # Nếu server không cấu hình API key, cho phép truy cập (chỉ nên dùng cho local dev)\n    # Để bảo mật hơn trong production, bạn nên throw lỗi nếu SERVER_API_KEY không được set\n    if not SERVER_API_KEY:\n        print(\"WARNING: No API key set. Server is running in unprotected mode.\")\n        return",
+        "peekOfCode": "API_KEY_NAME = \"Authorization\"\nAPI_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)\nSERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    if not SERVER_API_KEY:\n        print(\"FATAL: Server is not configured with an API_KEY.\")\n        raise HTTPException(\n            status_code=500,\n            detail=\"Server is not configured for authentication. Please set the API_KEY environment variable.\"",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -589,7 +588,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "API_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)\nSERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    # Nếu server không cấu hình API key, cho phép truy cập (chỉ nên dùng cho local dev)\n    # Để bảo mật hơn trong production, bạn nên throw lỗi nếu SERVER_API_KEY không được set\n    if not SERVER_API_KEY:\n        print(\"WARNING: No API key set. Server is running in unprotected mode.\")\n        return\n    if api_key_header is None:",
+        "peekOfCode": "API_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)\nSERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    if not SERVER_API_KEY:\n        print(\"FATAL: Server is not configured with an API_KEY.\")\n        raise HTTPException(\n            status_code=500,\n            detail=\"Server is not configured for authentication. Please set the API_KEY environment variable.\"\n        )",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -598,7 +597,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "SERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    # Nếu server không cấu hình API key, cho phép truy cập (chỉ nên dùng cho local dev)\n    # Để bảo mật hơn trong production, bạn nên throw lỗi nếu SERVER_API_KEY không được set\n    if not SERVER_API_KEY:\n        print(\"WARNING: No API key set. Server is running in unprotected mode.\")\n        return\n    if api_key_header is None:\n        raise HTTPException(",
+        "peekOfCode": "SERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    if not SERVER_API_KEY:\n        print(\"FATAL: Server is not configured with an API_KEY.\")\n        raise HTTPException(\n            status_code=500,\n            detail=\"Server is not configured for authentication. Please set the API_KEY environment variable.\"\n        )\n    if api_key_header is None:",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -607,7 +606,25 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "PROTECTED = Depends(get_api_key)\n# Global variables\ntts_model: Optional[F5TTSWrapper] = None\nreference_cache: Dict[str, Dict[str, Any]] = {}\nos.makedirs(CUSTOM_REF_PATH, exist_ok=True)\n# Thread safety and resource management\nmodel_lock = asyncio.Lock()  # Prevents concurrent model access\nreference_processing_lock = asyncio.Lock()  # For reference cache operations\nrequest_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks",
+        "peekOfCode": "PROTECTED = Depends(get_api_key)\n# --- FastAPI App and Router ---\napp = FastAPI(title=\"Unified F5TTS + OpenAI Compatible TTS Server\")\napi_router_v1 = APIRouter(prefix=\"/v1\", dependencies=[PROTECTED])\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "app = FastAPI(title=\"Unified F5TTS + OpenAI Compatible TTS Server\")\napi_router_v1 = APIRouter(prefix=\"/v1\", dependencies=[PROTECTED])\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n# --- Utility Functions ---",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "api_router_v1",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "api_router_v1 = APIRouter(prefix=\"/v1\", dependencies=[PROTECTED])\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n# --- Utility Functions ---\ndef create_wave_header(sample_rate, num_channels=1, bits_per_sample=16, data_size=0):",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -616,7 +633,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "model_lock = asyncio.Lock()  # Prevents concurrent model access\nreference_processing_lock = asyncio.Lock()  # For reference cache operations\nrequest_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True",
+        "peekOfCode": "model_lock = asyncio.Lock()\nreference_processing_lock = asyncio.Lock()\nrequest_semaphore = asyncio.Semaphore(3)\nbackground_semaphore = asyncio.Semaphore(2)\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE, chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len, separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -625,7 +642,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "reference_processing_lock = asyncio.Lock()  # For reference cache operations\nrequest_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)",
+        "peekOfCode": "reference_processing_lock = asyncio.Lock()\nrequest_semaphore = asyncio.Semaphore(3)\nbackground_semaphore = asyncio.Semaphore(2)\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE, chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len, separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -634,7 +651,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "request_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---",
+        "peekOfCode": "request_semaphore = asyncio.Semaphore(3)\nbackground_semaphore = asyncio.Semaphore(2)\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE, chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len, separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")\nasync def startup_event():",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -643,7 +660,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "background_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")",
+        "peekOfCode": "background_semaphore = asyncio.Semaphore(2)\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE, chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len, separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")\nasync def startup_event():\n    \"\"\"Initialize the F5TTS model on startup\"\"\"",
         "detail": "tts_server",
         "documentation": {}
     },
@@ -652,7 +669,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "text_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")\nasync def startup_event():",
+        "peekOfCode": "text_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE, chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len, separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")\nasync def startup_event():\n    \"\"\"Initialize the F5TTS model on startup\"\"\"\n    global tts_model, reference_cache, DEFAULT_SAMPLE_RATE",
         "detail": "tts_server",
         "documentation": {}
     }
