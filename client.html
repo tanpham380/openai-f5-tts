@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F5TTS Streaming Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto; /* Added top/bottom margin */
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: calc(100% - 24px); /* Account for padding */
+            height: 150px;
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 16px;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+        .controls {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+        select, input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fafafa;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+            min-width: 80px; /* Ensure buttons have minimum width */
+        }
+        button:hover:not(:disabled) { /* Added :not(:disabled) */
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Vertically align buttons */
+            margin-top: 20px;
+        }
+        .status {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #eef5fc;
+            border-left: 4px solid #3498db;
+            font-size: 15px;
+            word-wrap: break-word; /* Prevent long messages overflowing */
+        }
+        .status.error {
+            background-color: #fcdede;
+            border-left-color: #e74c3c;
+        }
+        .status.warning {
+            background-color: #fff0db;
+            border-left-color: #f39c12;
+        }
+        .status.success {
+            background-color: #e1fcec;
+            border-left-color: #2ecc71;
+        }
+        .audio-player-container {
+             margin-top: 25px;
+        }
+        #audio-player {
+            width: 100%;
+            display: block; /* Make it block to take full width */
+        }
+        .audio-visualizer {
+            width: 100%;
+            height: 80px;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 15px; /* Reduced margin */
+            border: 1px solid #d9edf7;
+        }
+        .visualizer-bars {
+            display: flex;
+            height: 100%;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 2px;
+        }
+        .bar {
+            background-color: #3498db;
+            width: 3px;
+            margin: 0 1px;
+            height: 5px; /* Minimum height */
+            transition: height 0.08s ease; /* Faster transition */
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ddd;
+            border-radius: 3px;
+            outline: none;
+            margin-top: 5px; /* Added margin */
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3498db;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+         input[type="range"]::-moz-range-thumb { /* Firefox */
+            width: 16px;
+            height: 16px;
+            background: #3498db;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 5px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            color: #555; /* Default color */
+        }
+        .tab.active {
+            border-bottom: 3px solid #3498db;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .parameter-section {
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            padding: 20px; /* Increased padding */
+            margin-bottom: 20px;
+        }
+        .parameter-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px; /* Added margin */
+            color: #2c3e50;
+            border-bottom: 1px solid #eee; /* Added separator */
+            padding-bottom: 10px;
+        }
+        .range-value {
+            font-weight: normal;
+            color: #555;
+        }
+        .reference-upload {
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            padding: 20px;
+        }
+         #ref-audio-preview {
+             width: 100%;
+             margin-top: 10px;
+         }
+         .hidden {
+             display: none;
+         }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>F5TTS Streaming Demo</h1>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="basic">Basic Controls</div>
+            <div class="tab" data-tab="advanced">Advanced Parameters</div>
+            <div class="tab" data-tab="reference">Custom Reference</div>
+        </div>
+
+        <!-- Basic Tab -->
+        <div class="tab-content active" id="basic-tab">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="speaker">Voice Reference:</label>
+                    <select id="speaker">
+                        <option value="" disabled selected>Loading voices...</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="speed">Speed: <span id="speed-value" class="range-value">1.0</span></label>
+                    <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0">
+                </div>
+            </div>
+
+            <textarea id="text-input" placeholder="Enter text to synthesize...">Sáng 18-4, cơ quan chức năng Quảng Ninh cho biết hiện cơ quan Cảnh sát điều tra Công an tỉnh Quảng Ninh đang tiếp tục truy bắt Bùi Đình Khánh, 31 tuổi.</textarea>
+        </div>
+
+        <!-- Advanced Tab -->
+        <div class="tab-content" id="advanced-tab">
+            <div class="parameter-section">
+                <h3>Generation Parameters</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="nfe-step">NFE Steps: <span id="nfe-value" class="range-value">32</span></label>
+                        <input type="range" id="nfe-step" min="10" max="60" step="1" value="32">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="cfg-strength">CFG Strength: <span id="cfg-value" class="range-value">2.0</span></label>
+                        <input type="range" id="cfg-strength" min="0.5" max="5.0" step="0.1" value="2.0">
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="sway-sampling">Sway Sampling: <span id="sway-value" class="range-value">-1.0</span></label>
+                        <input type="range" id="sway-sampling" min="-2.0" max="2.0" step="0.1" value="-1.0">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="cross-fade">Cross-Fade (Server): <span id="fade-value" class="range-value">0.15</span>s</label>
+                        <input type="range" id="cross-fade" min="0.0" max="0.5" step="0.01" value="0.15">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reference Tab -->
+        <div class="tab-content" id="reference-tab">
+            <div class="reference-upload">
+                <h3>Upload Custom Reference Audio</h3>
+                 <p>Upload a short (5-15 seconds) audio file (.wav, .mp3, .flac) of the desired voice.</p>
+                <div class="control-group">
+                    <label for="ref-audio-upload">Select Audio File:</label>
+                    <input type="file" id="ref-audio-upload" accept="audio/wav, audio/mpeg, audio/ogg, audio/flac, audio/aac, audio/mp4">
+                 </div>
+
+                <div class="control-group" style="margin-top: 15px;">
+                    <label for="ref-text">Reference Text Transcript (Optional but Recommended):</label>
+                    <textarea id="ref-text" rows="3" placeholder="Enter the exact transcript of the uploaded audio if available..."></textarea>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button id="upload-ref-button" disabled>Upload & Process</button>
+                    <span id="upload-status" style="margin-left: 15px;"></span>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <label>Preview Uploaded Reference:</label>
+                    <audio id="ref-audio-preview" controls class="hidden"></audio>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <div>
+                <button id="speak-button" disabled>Speak</button>
+                <button id="stop-button" disabled>Stop</button>
+            </div>
+            <button id="clear-button">Clear Text</button>
+        </div>
+
+        <!-- Audio Player and Visualizer -->
+         <div class="audio-player-container">
+            <audio id="audio-player" controls></audio>
+        </div>
+        <div class="audio-visualizer">
+            <div class="visualizer-bars" id="visualizer"></div>
+        </div>
+
+        <!-- Status Area -->
+        <div class="status" id="status">Initializing...</div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_URL = 'http://198.53.64.194:22760'; // Adjusted default port
+
+        // DOM Elements
+        const speakButton = document.getElementById('speak-button');
+        const stopButton = document.getElementById('stop-button');
+        const clearButton = document.getElementById('clear-button');
+        const textInput = document.getElementById('text-input');
+        const speakerSelect = document.getElementById('speaker');
+        const speedInput = document.getElementById('speed');
+        const speedValue = document.getElementById('speed-value');
+        const nfeStepInput = document.getElementById('nfe-step');
+        const nfeValue = document.getElementById('nfe-value');
+        const cfgStrengthInput = document.getElementById('cfg-strength');
+        const cfgValue = document.getElementById('cfg-value');
+        const swayInput = document.getElementById('sway-sampling');
+        const swayValue = document.getElementById('sway-value');
+        const crossFadeInput = document.getElementById('cross-fade');
+        const fadeValue = document.getElementById('fade-value');
+        const statusElement = document.getElementById('status');
+        const visualizer = document.getElementById('visualizer');
+        const tabButtons = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const refAudioUpload = document.getElementById('ref-audio-upload');
+        const refTextInput = document.getElementById('ref-text');
+        const refAudioPreview = document.getElementById('ref-audio-preview');
+        const uploadRefButton = document.getElementById('upload-ref-button');
+        const uploadStatus = document.getElementById('upload-status');
+        const audioPlayer = document.getElementById('audio-player'); // The <audio> element for playback
+
+        // Audio context and related variables
+        let audioContext = null;
+        let audioSourceNode = null; // Source node for the <audio> element
+        let audioAnalyser = null;
+        let visualizerBars = [];
+        let animationFrameId = null;
+        let currentAudioUrl = null; // To store the Object URL
+
+        // --- Initialization ---
+
+        function initAudioContext() {
+            if (audioContext) return; // Already initialized
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioAnalyser = audioContext.createAnalyser();
+                audioAnalyser.fftSize = 256; // Adjust detail vs performance
+                audioAnalyser.minDecibels = -90;
+                audioAnalyser.maxDecibels = -10;
+                audioAnalyser.smoothingTimeConstant = 0.85;
+
+                // Connect analyser to destination here, source will be connected later
+                audioAnalyser.connect(audioContext.destination);
+
+                console.log("AudioContext initialized.");
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser", e);
+                updateStatus("Error: Web Audio API not supported.", "error");
+            }
+        }
+
+        function initVisualizer() {
+            visualizer.innerHTML = ''; // Clear previous bars
+            visualizerBars = [];
+            const barCount = 64; // Number of bars
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                visualizer.appendChild(bar);
+                visualizerBars.push(bar);
+            }
+        }
+
+        // --- UI Updates ---
+
+        function updateStatus(message, type = "info") {
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`; // Add type class (info, success, warning, error)
+            console.log(`Status [${type}]: ${message}`);
+        }
+
+        function updateSliderValue(inputId, outputId) {
+            const input = document.getElementById(inputId);
+            const output = document.getElementById(outputId);
+            if (input && output) {
+                output.textContent = input.value;
+                input.addEventListener('input', () => {
+                    output.textContent = input.value;
+                });
+            }
+        }
+
+        // --- Audio Playback and Streaming ---
+
+        async function generateAndPlayAudio() {
+            if (!textInput.value.trim()) {
+                updateStatus("Please enter some text to synthesize.", "warning");
+                return;
+            }
+            if (!speakerSelect.value) {
+                 updateStatus("Please select a voice reference.", "warning");
+                 return;
+            }
+
+            // Ensure AudioContext is active (requires user interaction)
+            if (!audioContext) {
+                initAudioContext();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            if (!audioContext) {
+                 updateStatus("Could not initialize AudioContext.", "error");
+                 return;
+            }
+
+            stopPlayback(); // Stop any previous playback
+            speakButton.disabled = true;
+            stopButton.disabled = false;
+            updateStatus("Requesting speech from server...", "info");
+
+            try {
+                const requestData = {
+                    text: textInput.value,
+                    speaker: speakerSelect.value, // Use the selected reference ID
+                    nfe_step: parseInt(nfeStepInput.value),
+                    cfg_strength: parseFloat(cfgStrengthInput.value),
+                    speed: parseFloat(speedInput.value),
+                    cross_fade_duration: parseFloat(crossFadeInput.value),
+                    sway_sampling_coef: parseFloat(swayInput.value)
+                };
+
+                console.log("Sending TTS request:", JSON.stringify(requestData));
+
+                const response = await fetch(`${API_URL}/tts/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                }
+
+                updateStatus("Receiving audio stream...", "info");
+
+                // Get the entire response as a Blob
+                const audioBlob = await response.blob();
+
+                // Revoke previous Object URL if it exists
+                if (currentAudioUrl) {
+                    URL.revokeObjectURL(currentAudioUrl);
+                }
+
+                // Create a new Object URL
+                currentAudioUrl = URL.createObjectURL(audioBlob);
+
+                // Set the URL to the audio player
+                audioPlayer.src = currentAudioUrl;
+                audioPlayer.load(); // Preload the audio
+
+                await audioPlayer.play(); // Start playback
+                updateStatus("Playing audio...", "info");
+                startVisualizer(); // Start visualizer after playback starts
+
+            } catch (error) {
+                console.error("Speech generation/playback error:", error);
+                updateStatus(`Error: ${error.message}`, "error");
+                speakButton.disabled = false;
+                stopButton.disabled = true;
+            }
+        }
+
+        function stopPlayback() {
+            console.log("Stopping playback...");
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0; // Reset playback position
+            audioPlayer.removeAttribute('src'); // Remove source
+
+             // Revoke the Object URL to free memory
+            if (currentAudioUrl) {
+                URL.revokeObjectURL(currentAudioUrl);
+                currentAudioUrl = null;
+                console.log("Revoked previous audio Object URL.");
+            }
+
+            stopVisualizer(); // Stop visualizer updates
+            speakButton.disabled = false;
+            stopButton.disabled = true;
+             // Don't clear status here, might show completion or error message
+        }
+
+        // --- Audio Visualizer ---
+
+        function startVisualizer() {
+            if (!audioContext || !audioAnalyser) return;
+
+            // Connect the <audio> element to the analyser if not already done
+            if (!audioSourceNode) {
+                try {
+                    audioSourceNode = audioContext.createMediaElementSource(audioPlayer);
+                    audioSourceNode.connect(audioAnalyser);
+                    // Analyser is already connected to destination in initAudioContext
+                    console.log("Audio element connected to analyser.");
+                } catch (e) {
+                     console.error("Error connecting media element source:", e);
+                     updateStatus("Could not start visualizer.", "warning");
+                     return; // Stop if connection fails
+                }
+            }
+
+            // Start the animation loop
+            const bufferLength = audioAnalyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                if (!audioPlayer.paused) { // Only draw if playing
+                    animationFrameId = requestAnimationFrame(draw);
+                    audioAnalyser.getByteFrequencyData(dataArray); // Use frequency data
+
+                    visualizerBars.forEach((bar, i) => {
+                        const index = Math.floor(i * bufferLength / visualizerBars.length);
+                        const value = dataArray[index];
+                         // Scale height: Adjust divisor and multiplier as needed
+                        const height = Math.max((value / 2.5), 2); // Ensure minimum height of 2px
+                        bar.style.height = `${Math.min(height, 80)}px`; // Max height is visualizer height
+                    });
+                } else {
+                    // Reset bars when paused/stopped
+                    visualizerBars.forEach(bar => { bar.style.height = '2px'; });
+                }
+            }
+            draw(); // Start the loop
+        }
+
+        function stopVisualizer() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            // Reset bars to minimum height
+            visualizerBars.forEach(bar => {
+                bar.style.height = '2px';
+            });
+             console.log("Visualizer stopped.");
+        }
+
+        // --- Reference Audio Handling ---
+
+        refAudioUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                 // Preview the audio locally
+                const objectURL = URL.createObjectURL(file);
+                 refAudioPreview.src = objectURL;
+                 refAudioPreview.classList.remove('hidden');
+                 refAudioPreview.onload = () => URL.revokeObjectURL(objectURL); // Clean up preview URL
+
+                 uploadRefButton.disabled = false;
+                 uploadStatus.textContent = `Ready to upload: ${file.name}`;
+            } else {
+                uploadRefButton.disabled = true;
+                uploadStatus.textContent = '';
+                refAudioPreview.classList.add('hidden');
+                 refAudioPreview.removeAttribute('src');
+            }
+        });
+
+        uploadRefButton.addEventListener('click', async () => {
+            const file = refAudioUpload.files[0];
+            if (!file) {
+                uploadStatus.textContent = 'No file selected.';
+                return;
+            }
+
+            uploadRefButton.disabled = true;
+            uploadStatus.textContent = `Uploading ${file.name}...`;
+            updateStatus(`Uploading reference audio: ${file.name}...`, "info");
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                if (refTextInput.value.trim()) {
+                    formData.append('text', refTextInput.value.trim());
+                }
+
+                const response = await fetch(`${API_URL}/upload_reference`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                     throw new Error(result.detail || `Upload failed with status ${response.status}`);
+                }
+
+                uploadStatus.textContent = `Upload successful! Processing... (ID: ${result.ref_id})`;
+                updateStatus(`Reference '${result.estimated_name}' is processing...`, "info");
+
+                // Add the processing voice to the dropdown temporarily
+                const option = document.createElement('option');
+                option.value = result.ref_id;
+                option.textContent = result.estimated_name;
+                option.dataset.status = 'processing'; // Mark as processing
+                speakerSelect.appendChild(option);
+                speakerSelect.value = result.ref_id; // Select the new voice
+
+                // Optionally, start polling for status or wait for user to refresh
+                 // For simplicity, we'll just let the user re-select or refresh later
+                 // You could implement polling get_references here.
+
+            } catch (error) {
+                console.error('Error uploading reference audio:', error);
+                uploadStatus.textContent = `Upload error: ${error.message}`;
+                updateStatus(`Error uploading reference: ${error.message}`, "error");
+            } finally {
+                 // Re-enable upload button only if file still selected? Or clear selection?
+                 // Let's clear selection for simplicity
+                 refAudioUpload.value = ''; // Clear file input
+                 refAudioPreview.classList.add('hidden');
+                 refAudioPreview.removeAttribute('src');
+                 // uploadRefButton.disabled = true; // Keep disabled after attempt
+            }
+        });
+
+
+        // --- API Interaction ---
+
+        async function loadReferences() {
+            updateStatus("Loading available voices...", "info");
+            try {
+                const response = await fetch(`${API_URL}/references`);
+                 if (!response.ok) {
+                     const errorText = await response.text();
+                     throw new Error(`Failed to load voices: ${response.status} - ${errorText}`);
+                 }
+                const references = await response.json();
+
+                speakerSelect.innerHTML = '<option value="" disabled>Select a voice...</option>'; // Clear and add placeholder
+                let firstAvailable = null;
+
+                for (const [id, ref] of Object.entries(references)) {
+                    if (ref.status === true || ref.status === 'processing') { // Show ready and processing voices
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = ref.name || id;
+                         option.dataset.status = ref.status; // Store status
+                        if(ref.status === 'processing') option.textContent += " (Processing...)";
+                        speakerSelect.appendChild(option);
+                        if (ref.status === true && !firstAvailable) {
+                            firstAvailable = id; // Select the first *ready* voice
+                        }
+                    } else {
+                         console.warn(`Reference ${id} has status: ${ref.status}. Not adding to list.`);
+                    }
+                }
+
+                if (firstAvailable) {
+                    speakerSelect.value = firstAvailable;
+                } else if (speakerSelect.options.length > 1) { // If only placeholder + processing voices exist
+                     speakerSelect.selectedIndex = 1; // Select the first processing one
+                 } else {
+                     speakerSelect.value = ""; // No voices ready
+                 }
+
+
+                if (Object.keys(references).length > 0) {
+                    updateStatus("Voice references loaded.", "success");
+                     speakButton.disabled = false; // Enable speak button only if voices loaded
+                } else {
+                    updateStatus("No voice references available from server.", "warning");
+                     speakButton.disabled = true;
+                }
+
+            } catch (error) {
+                console.error("Error loading references:", error);
+                updateStatus(`Error loading voices: ${error.message}`, "error");
+                speakerSelect.innerHTML = '<option value="" disabled>Error loading</option>';
+                 speakButton.disabled = true;
+            }
+        }
+
+        async function checkApiHealth() {
+            updateStatus("Connecting to API server...", "info");
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                     throw new Error(`Server responded with status ${response.status}`);
+                }
+
+                if (data.status === 'ok') {
+                    updateStatus("Connected to F5TTS server. " + (data.message || ""), "success");
+                    await loadReferences(); // Load references if server is healthy
+                } else {
+                    updateStatus(`Server Status: ${data.status} - ${data.message || ''}`, "warning");
+                     speakButton.disabled = true;
+                }
+            } catch (error) {
+                updateStatus(`Error connecting to API: ${error.message}. Please ensure the server is running at ${API_URL}.`, "error");
+                 speakButton.disabled = true;
+                console.error("API health check failed:", error);
+            }
+        }
+
+        // --- Event Listeners ---
+
+        speakButton.addEventListener('click', generateAndPlayAudio);
+        stopButton.addEventListener('click', stopPlayback);
+        clearButton.addEventListener('click', () => {
+            textInput.value = '';
+            updateStatus("Text cleared.", "info");
+        });
+
+        // Handle audio player events
+        audioPlayer.addEventListener('ended', () => {
+            updateStatus("Playback finished.", "success");
+            stopPlayback(); // Perform cleanup
+        });
+        audioPlayer.addEventListener('error', (e) => {
+            console.error("Audio player error:", e);
+            updateStatus("Error during audio playback.", "error");
+            stopPlayback(); // Clean up on error
+        });
+         audioPlayer.addEventListener('pause', () => {
+             if(audioPlayer.duration > 0 && audioPlayer.currentTime === audioPlayer.duration) {
+                 // This is the 'ended' event case, already handled
+             } else if (audioPlayer.readyState >= 2) { // Only update if paused mid-play
+                 updateStatus("Playback paused.", "info");
+                 stopVisualizer(); // Stop viz when paused
+             }
+         });
+         audioPlayer.addEventListener('play', () => {
+             if (audioPlayer.readyState >= 2) { // Check if ready to play
+                 updateStatus("Playing audio...", "info");
+                 startVisualizer(); // Resume viz on play
+             }
+         });
+
+
+        // Tab switching
+        tabButtons.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabButtons.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        // Update slider values display
+        updateSliderValue('speed', 'speed-value');
+        updateSliderValue('nfe-step', 'nfe-value');
+        updateSliderValue('cfg-strength', 'cfg-value');
+        updateSliderValue('sway-sampling', 'sway-value');
+        updateSliderValue('cross-fade', 'fade-value');
+
+        // --- Page Load ---
+        window.addEventListener('load', () => {
+             initVisualizer();
+             checkApiHealth(); // Check health and load refs on load
+         });
+
+    </script>
+</body>
+</html>

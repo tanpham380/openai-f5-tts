@@ -1,0 +1,659 @@
+[
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "torch",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "torch",
+        "description": "torch",
+        "detail": "torch",
+        "documentation": {}
+    },
+    {
+        "label": "torchaudio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "torchaudio",
+        "description": "torchaudio",
+        "detail": "torchaudio",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Union",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncGenerator",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "cached_path",
+        "importPath": "cached_path",
+        "description": "cached_path",
+        "isExtraImport": true,
+        "detail": "cached_path",
+        "documentation": {}
+    },
+    {
+        "label": "get_class",
+        "importPath": "hydra.utils",
+        "description": "hydra.utils",
+        "isExtraImport": true,
+        "detail": "hydra.utils",
+        "documentation": {}
+    },
+    {
+        "label": "OmegaConf",
+        "importPath": "omegaconf",
+        "description": "omegaconf",
+        "isExtraImport": true,
+        "detail": "omegaconf",
+        "documentation": {}
+    },
+    {
+        "label": "files",
+        "importPath": "importlib.resources",
+        "description": "importlib.resources",
+        "isExtraImport": true,
+        "detail": "importlib.resources",
+        "documentation": {}
+    },
+    {
+        "label": "AudioSegment",
+        "importPath": "pydub",
+        "description": "pydub",
+        "isExtraImport": true,
+        "detail": "pydub",
+        "documentation": {}
+    },
+    {
+        "label": "silence",
+        "importPath": "pydub",
+        "description": "pydub",
+        "isExtraImport": true,
+        "detail": "pydub",
+        "documentation": {}
+    },
+    {
+        "label": "CFM",
+        "importPath": "f5_tts.model",
+        "description": "f5_tts.model",
+        "isExtraImport": true,
+        "detail": "f5_tts.model",
+        "documentation": {}
+    },
+    {
+        "label": "get_tokenizer",
+        "importPath": "f5_tts.model.utils",
+        "description": "f5_tts.model.utils",
+        "isExtraImport": true,
+        "detail": "f5_tts.model.utils",
+        "documentation": {}
+    },
+    {
+        "label": "convert_char_to_pinyin",
+        "importPath": "f5_tts.model.utils",
+        "description": "f5_tts.model.utils",
+        "isExtraImport": true,
+        "detail": "f5_tts.model.utils",
+        "documentation": {}
+    },
+    {
+        "label": "list_str_to_idx",
+        "importPath": "f5_tts.model.utils",
+        "description": "f5_tts.model.utils",
+        "isExtraImport": true,
+        "detail": "f5_tts.model.utils",
+        "documentation": {}
+    },
+    {
+        "label": "chunk_text",
+        "importPath": "f5_tts.infer.utils_infer",
+        "description": "f5_tts.infer.utils_infer",
+        "isExtraImport": true,
+        "detail": "f5_tts.infer.utils_infer",
+        "documentation": {}
+    },
+    {
+        "label": "load_vocoder",
+        "importPath": "f5_tts.infer.utils_infer",
+        "description": "f5_tts.infer.utils_infer",
+        "isExtraImport": true,
+        "detail": "f5_tts.infer.utils_infer",
+        "documentation": {}
+    },
+    {
+        "label": "transcribe",
+        "importPath": "f5_tts.infer.utils_infer",
+        "description": "f5_tts.infer.utils_infer",
+        "isExtraImport": true,
+        "detail": "f5_tts.infer.utils_infer",
+        "documentation": {}
+    },
+    {
+        "label": "initialize_asr_pipeline",
+        "importPath": "f5_tts.infer.utils_infer",
+        "description": "f5_tts.infer.utils_infer",
+        "isExtraImport": true,
+        "detail": "f5_tts.infer.utils_infer",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "FastAPI",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Query",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "BackgroundTasks",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "File",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Form",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Security",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIKeyHeader",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "CORSMiddleware",
+        "importPath": "fastapi.middleware.cors",
+        "description": "fastapi.middleware.cors",
+        "isExtraImport": true,
+        "detail": "fastapi.middleware.cors",
+        "documentation": {}
+    },
+    {
+        "label": "StreamingResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "HTMLResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "io",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "io",
+        "description": "io",
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "wave",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "wave",
+        "description": "wave",
+        "detail": "wave",
+        "documentation": {}
+    },
+    {
+        "label": "TTSnorm",
+        "importPath": "vinorm",
+        "description": "vinorm",
+        "isExtraImport": true,
+        "detail": "vinorm",
+        "documentation": {}
+    },
+    {
+        "label": "RecursiveCharacterTextSplitter",
+        "importPath": "langchain.text_splitter",
+        "description": "langchain.text_splitter",
+        "isExtraImport": true,
+        "detail": "langchain.text_splitter",
+        "documentation": {}
+    },
+    {
+        "label": "traceback",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "traceback",
+        "description": "traceback",
+        "detail": "traceback",
+        "documentation": {}
+    },
+    {
+        "label": "asynccontextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
+        "label": "gc",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "gc",
+        "description": "gc",
+        "detail": "gc",
+        "documentation": {}
+    },
+    {
+        "label": "F5TTSWrapper",
+        "importPath": "f5tts_wrapper",
+        "description": "f5tts_wrapper",
+        "isExtraImport": true,
+        "detail": "f5tts_wrapper",
+        "documentation": {}
+    },
+    {
+        "label": "F5TTSWrapper",
+        "kind": 6,
+        "importPath": "f5tts_wrapper",
+        "description": "f5tts_wrapper",
+        "peekOfCode": "class F5TTSWrapper:\n    \"\"\"\n    A wrapper class for F5-TTS that preprocesses reference audio once \n    and allows for repeated TTS generation.\n    \"\"\"\n    def __init__(\n        self, \n        model_name: str = \"F5TTS_v1_Base\", \n        ckpt_path: Optional[str] = None,\n        vocab_file: Optional[str] = None,",
+        "detail": "f5tts_wrapper",
+        "documentation": {}
+    },
+    {
+        "label": "TTSRequest",
+        "kind": 6,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "class TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0\n    speed: float = 1.0\n    cross_fade_duration: float = 0.15\n    sway_sampling_coef: float = -1.0\nclass OpenAITTSRequest(BaseModel):\n    model: str",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAITTSRequest",
+        "kind": 6,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "class OpenAITTSRequest(BaseModel):\n    model: str\n    input: str\n    voice: str\n    instructions: Optional[str] = None\n    response_format: Optional[str] = \"wav\"\n# --- Utility Functions ---\ndef create_wave_header(sample_rate, num_channels=1, bits_per_sample=16, data_size=0):\n    \"\"\"Create a wave header for streaming. data_size=0 means unknown size.\"\"\"\n    buffer = io.BytesIO()",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "create_wave_header",
+        "kind": 2,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "def create_wave_header(sample_rate, num_channels=1, bits_per_sample=16, data_size=0):\n    \"\"\"Create a wave header for streaming. data_size=0 means unknown size.\"\"\"\n    buffer = io.BytesIO()\n    with wave.open(buffer, 'wb') as wf:\n        wf.setnchannels(num_channels)\n        wf.setsampwidth(bits_per_sample // 8)\n        wf.setframerate(sample_rate)\n        wf.writeframes(b'')\n    header_bytes = buffer.getvalue()\n    if data_size > 0:",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "process_chunk",
+        "kind": 2,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "def process_chunk(chunk_text: str, model: F5TTSWrapper, request: TTSRequest) -> Optional[bytes]:\n    \"\"\"Process a single text chunk and return raw audio bytes (int16)\"\"\"\n    chunk_text = TTSnorm(chunk_text).strip()\n    chunk_text = chunk_text.strip()\n    if not chunk_text:\n        return None\n    if chunk_text.endswith(\"..\"):\n        chunk_text = chunk_text[:-1].strip()\n    if not chunk_text:\n        return None",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "MODEL_CONFIG",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "MODEL_CONFIG = {\n    \"model_name\": \"F5TTS_v1_Base\",  # Use F5TTS_v1_Base for EraX models\n    \"vocoder_name\": \"vocos\",  # Using Vocos vocoder as in example\n    \"ckpt_path\": \"./erax-ai_model/model_48000.safetensors\",  # Path to your EraX model\n    \"vocab_file\": \"./erax-ai_model/vocab.txt\",  # Path to vocab file in your folder\n    \"use_ema\": True,  # Set to True for better quality (corrected from example)\n    \"target_sample_rate\": 24000,  # Output sample rate (24kHz is standard)\n    \"use_duration_predictor\": False,  # Standard setting\n    # Additional parameters from example code for better compatibility\n    \"n_mel_channels\": 100,  # Number of mel-spectrogram channels",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_REFERENCES",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "DEFAULT_REFERENCES = {\n    \"male\": {\n        \"audio\": \"./male_south_TEACH_chunk_0_segment_684.wav\",\n        \"text\": \"Người người hô hào thay đổi phương pháp giảng dạy. Bộ giáo dục và đào tạo Việt Nam không thiếu những dự án nhằm thay đổi diện mạo giáo dục nước nhà. Nhưng trong khi những thành quả đổi mới còn chưa kịp thu về, thì những ví dụ điển hình về bước lùi của giáo dục ngày càng hiện rõ.\",\n        \"name\": \"Male Voice (South)\"\n    },\n    \"female\": {\n        \"audio\": \"./female-vts.wav\",\n        \"text\": \"Ai đã đến Hàng Dương, đều không thể cầm lòng về những nấm mộ chen nhau, nhấp nhô trải khắp một vùng đồi. Những nấm mộ có tên và không tên, nhưng nấm mộ lấp ló trong lùm cây, bụi cỏ.\",\n        \"name\": \"Female Voice (VTS)\"",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "CUSTOM_REF_PATH",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "CUSTOM_REF_PATH = \"./references\"\nTEXT_SPLITTER_CHUNK_SIZE = 100\nTEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables (will be initialized during startup)\nDEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT_SPLITTER_CHUNK_SIZE",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "TEXT_SPLITTER_CHUNK_SIZE = 100\nTEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables (will be initialized during startup)\nDEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT_SPLITTER_CHUNK_OVERLAP",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "TEXT_SPLITTER_CHUNK_OVERLAP = 0\n# Global variables (will be initialized during startup)\nDEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0\n    speed: float = 1.0",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_SAMPLE_RATE",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "DEFAULT_SAMPLE_RATE = 24000  # Updated to match EraX model\n# --- Pydantic Models ---\nclass TTSRequest(BaseModel):\n    text: str\n    speaker: Optional[str] = \"male\"\n    nfe_step: int = 32\n    cfg_strength: float = 2.0\n    speed: float = 1.0\n    cross_fade_duration: float = 0.15\n    sway_sampling_coef: float = -1.0",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "app = FastAPI(title=\"Unified F5TTS + OpenAI Compatible TTS Server\")\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\nAPI_KEY_NAME = \"Authorization\"\nAPI_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "API_KEY_NAME",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "API_KEY_NAME = \"Authorization\"\nAPI_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)\nSERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    # Nếu server không cấu hình API key, cho phép truy cập (chỉ nên dùng cho local dev)\n    # Để bảo mật hơn trong production, bạn nên throw lỗi nếu SERVER_API_KEY không được set\n    if not SERVER_API_KEY:\n        print(\"WARNING: No API key set. Server is running in unprotected mode.\")\n        return",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "API_KEY_HEADER",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "API_KEY_HEADER = APIKeyHeader(name=API_KEY_NAME, auto_error=False)\nSERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    # Nếu server không cấu hình API key, cho phép truy cập (chỉ nên dùng cho local dev)\n    # Để bảo mật hơn trong production, bạn nên throw lỗi nếu SERVER_API_KEY không được set\n    if not SERVER_API_KEY:\n        print(\"WARNING: No API key set. Server is running in unprotected mode.\")\n        return\n    if api_key_header is None:",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "SERVER_API_KEY",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "SERVER_API_KEY = os.getenv(\"API_KEY\")\nasync def get_api_key(api_key_header: str = Security(API_KEY_HEADER)):\n    \"\"\"Dependency to validate the API key from the Authorization header.\"\"\"\n    # Nếu server không cấu hình API key, cho phép truy cập (chỉ nên dùng cho local dev)\n    # Để bảo mật hơn trong production, bạn nên throw lỗi nếu SERVER_API_KEY không được set\n    if not SERVER_API_KEY:\n        print(\"WARNING: No API key set. Server is running in unprotected mode.\")\n        return\n    if api_key_header is None:\n        raise HTTPException(",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "PROTECTED",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "PROTECTED = Depends(get_api_key)\n# Global variables\ntts_model: Optional[F5TTSWrapper] = None\nreference_cache: Dict[str, Dict[str, Any]] = {}\nos.makedirs(CUSTOM_REF_PATH, exist_ok=True)\n# Thread safety and resource management\nmodel_lock = asyncio.Lock()  # Prevents concurrent model access\nreference_processing_lock = asyncio.Lock()  # For reference cache operations\nrequest_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "model_lock",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "model_lock = asyncio.Lock()  # Prevents concurrent model access\nreference_processing_lock = asyncio.Lock()  # For reference cache operations\nrequest_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "reference_processing_lock",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "reference_processing_lock = asyncio.Lock()  # For reference cache operations\nrequest_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "request_semaphore",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "request_semaphore = asyncio.Semaphore(3)  # Max 3 concurrent TTS requests\nbackground_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "background_semaphore",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "background_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent background tasks\ntext_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")",
+        "detail": "tts_server",
+        "documentation": {}
+    },
+    {
+        "label": "text_splitter",
+        "kind": 5,
+        "importPath": "tts_server",
+        "description": "tts_server",
+        "peekOfCode": "text_splitter = RecursiveCharacterTextSplitter(\n    chunk_size=TEXT_SPLITTER_CHUNK_SIZE,\n    chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,\n    length_function=len,\n    separators=[\"\\n\\n\", \"\\n\", \". \", \"! \", \"? \", \"; \", \", \", \" \", \"\"],\n    keep_separator=True\n)\n# --- Startup Event ---\n@app.on_event(\"startup\")\nasync def startup_event():",
+        "detail": "tts_server",
+        "documentation": {}
+    }
+]

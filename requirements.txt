@@ -1,0 +1,14 @@
+requests
+soundfile
+numpy
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart # Needed by FastAPI for form data, good to include
+WeTextProcessing
+inflect
+fastapi  
+piper-tts 
+langchain 
+underthesea 
+vinorm
