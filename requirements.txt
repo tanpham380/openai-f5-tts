@@ -1,4 +1,4 @@
-request
+requests
 numpy
 uvicorn[standard]
 pydantic
@@ -7,3 +7,11 @@ piper-tts
 langchain 
 underthesea 
 vinorm
+huggingface_hub
+torch
+torchaudio
+f5-tts
+cached-path
+hydra-core
+omegaconf
+pydub

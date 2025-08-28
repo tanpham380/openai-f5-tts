@@ -24,6 +24,45 @@ Server được xây dựng bằng **FastAPI**, hỗ trợ streaming audio và �
 - **Ngôn ngữ**: Python 3.12
 
 ## 🚀 Bắt đầu
+[![](https://img.shields.io/badge/Download%20Model-HuggingFace-blue)](https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models)
+
+### Tải model EraX F5TTS
+
+**🎉 Tự động tải model:** Server sẽ tự động kiểm tra và tải model EraX từ HuggingFace khi khởi động! Không cần cấu hình gì thêm.
+
+**🔄 Quá trình hoạt động:**
+1. Khi khởi động, F5TTSWrapper sẽ kiểm tra thư mục `erax-ai_model/`
+2. Nếu chưa có model → tự động tải từ `erax-ai/EraX-Smile-UnixSex-F5`
+3. Nếu đã có model → sử dụng model cục bộ
+4. Model được cache và chỉ tải một lần
+
+**📁 Cấu trúc sau khi tải:**
+```
+erax-ai_model/
+├── model_48000.safetensors
+├── vocab.txt
+```
+
+**�️ Tùy chọn đường dẫn HuggingFace Cache:**
+Bạn có thể chỉ định thư mục cache cho HuggingFace models:
+```python
+# Trong F5TTSWrapper
+wrapper = F5TTSWrapper(hf_cache_dir="./custom_hf_cache")
+```
+
+**�🛠️ Tải thủ công (tùy chọn):**
+Nếu muốn tải thủ công, bạn có thể tải từ: 
+👉 [https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models](https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models)
+
+**⚙️ Tùy chọn model path tùy chỉnh:**
+Bạn có thể sử dụng model từ đường dẫn tùy chỉnh:
+```python
+# Sử dụng model từ đường dẫn khác
+wrapper = F5TTSWrapper(
+    ckpt_path="/path/to/your/custom_model.safetensors",
+    vocab_file="/path/to/your/custom_vocab.txt"
+)
+```
 
 ### Yêu cầu tiên quyết
 
@@ -138,6 +177,48 @@ Server được cấu hình thông qua các biến môi trường:
 
 > **Cảnh báo**: Server sẽ không chấp nhận yêu cầu tới các endpoint được bảo vệ nếu biến môi trường `API_KEY` không được thiết lập.
 
+### 🔧 Cấu hình nâng cao
+
+**📂 Tùy chỉnh đường dẫn model:**
+Bạn có thể cấu hình F5TTSWrapper với các đường dẫn tùy chỉnh trong `tts_server.py`:
+
+```python
+MODEL_CONFIG = {
+    # Tự động tải EraX model (mặc định)
+    "ckpt_path": None,  # None = auto-download EraX
+    "vocab_file": None, # None = auto-download EraX vocab
+    
+    # Hoặc sử dụng model tùy chỉnh
+    # "ckpt_path": "/path/to/custom_model.safetensors",
+    # "vocab_file": "/path/to/custom_vocab.txt",
+    
+    # Cấu hình cache HuggingFace
+    "hf_cache_dir": "./hf_cache",
+    
+    # Cấu hình device
+    "device": "auto",  # auto, cuda, cpu
+}
+```
+
+**📁 Tùy chỉnh thư mục lưu trữ:**
+```python
+# Trong tts_server.py
+CUSTOM_REF_PATH = "./references"  # Thư mục lưu custom references
+REF_AUDIO_CONFIGS = {
+    "default_vi": {"path": "./ref_audios/default_vi.wav", "text": "..."},
+    # Thêm references mặc định khác
+}
+```
+
+**🌐 Cấu hình mạng:**
+```bash
+# Thay đổi host và port
+python tts_server.py --host 0.0.0.0 --port 8080
+
+# Hoặc qua Docker
+docker run -p 8080:8000 your-tts-image
+```
+
 ## API Usage
 
 ### Xác thực
@@ -166,10 +247,16 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 
 File `test_audio.wav` sẽ được tạo ra trong thư mục hiện tại của bạn.
 
-### Ví dụ: Tải lên giọng nói mới
+### Ví dụ: Tải lên giọng nói mới (Custom Reference)
 
-Bạn có thể thêm một giọng nói mới một cách linh hoạt bằng cách tải lên một file âm thanh (`.wav` hoặc `.mp3`).
+Bạn có thể thêm một giọng nói mới một cách linh hoạt bằng cách tải lên một file âm thanh (`.wav`, `.mp3`, `.flac`, v.v.).
 
+**📋 Yêu cầu cho Custom Reference:**
+- File âm thanh: 5-15 giây, chất lượng tốt
+- Định dạng hỗ trợ: `.wav`, `.mp3`, `.flac`, `.ogg`, `.aac`, `.mp4`
+- Transcript (tùy chọn nhưng khuyến khích): Nội dung văn bản chính xác của audio
+
+**💻 Sử dụng qua API:**
 ```bash
 # Thay <YOUR_API_KEY> bằng key bạn đã cấu hình
 curl -X POST http://localhost:8000/v1/upload_reference \
@@ -178,7 +265,36 @@ curl -X POST http://localhost:8000/v1/upload_reference \
 -F "text=Nội dung văn bản tương ứng với file âm thanh."
 ```
 
-Phản hồi sẽ chứa `ref_id` của giọng nói mới, ví dụ: `custom_1678886400`. Bạn có thể sử dụng `ref_id` này làm giá trị cho trường `voice` trong các yêu cầu tiếp theo.
+**🌐 Sử dụng qua Web Interface:**
+1. Mở trình duyệt tại `http://localhost:8000`
+2. Chuyển sang tab "**Custom Reference**"
+3. Chọn file âm thanh (5-15 giây)
+4. Nhập transcript (tùy chọn)
+5. Nhấn "**Upload & Process**"
+6. Giọng nói mới sẽ xuất hiện trong danh sách Voice Reference
+
+**📁 Vị trí lưu trữ:**
+Custom references được lưu trong thư mục `./references/` với format:
+```
+references/
+├── custom_1678886400.wav  # ID tự động tạo
+├── custom_1678886401.mp3
+└── ...
+```
+
+**🔄 Sử dụng Custom Reference:**
+Sau khi upload thành công, sử dụng `ref_id` được trả về làm giá trị cho trường `voice`:
+```bash
+curl -X POST http://localhost:8000/v1/audio/speech \
+-H "Authorization: Bearer <YOUR_API_KEY>" \
+-H "Content-Type: application/json" \
+-d '{
+    "model": "F5TTS_v1_Base",
+    "input": "Văn bản cần tổng hợp giọng nói.",
+    "voice": "custom_1678886400",  # <-- Sử dụng ref_id
+    "response_format": "wav"
+}'
+```
 
 ## Endpoints
 
@@ -216,6 +332,45 @@ The server is built with **FastAPI**, supports audio streaming, and is optimized
 - **Language**: Python 3.12
 
 ## 🚀 Getting Started
+[![](https://img.shields.io/badge/Download%20Model-HuggingFace-blue)](https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models)
+
+### Download EraX F5TTS Model
+
+**🎉 Automatic Model Download:** The server will automatically check and download the EraX model from HuggingFace on startup! No additional configuration needed.
+
+**🔄 How it works:**
+1. On startup, F5TTSWrapper checks the `erax-ai_model/` directory
+2. If model not found → automatically downloads from `erax-ai/EraX-Smile-UnixSex-F5`
+3. If model exists → uses local model
+4. Model is cached and downloaded only once
+
+**📁 Directory structure after download:**
+```
+erax-ai_model/
+├── model_48000.safetensors
+├── vocab.txt
+```
+
+**🗂️ Custom HuggingFace Cache Path:**
+You can specify a custom cache directory for HuggingFace models:
+```python
+# In F5TTSWrapper
+wrapper = F5TTSWrapper(hf_cache_dir="./custom_hf_cache")
+```
+
+**🛠️ Manual Download (Optional):**
+If you prefer manual download, you can get the files from: 
+👉 [https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models](https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models)
+
+**⚙️ Custom Model Path Options:**
+You can use models from custom paths:
+```python
+# Use model from custom path
+wrapper = F5TTSWrapper(
+    ckpt_path="/path/to/your/custom_model.safetensors",
+    vocab_file="/path/to/your/custom_vocab.txt"
+)
+```
 
 ### Prerequisites
 
@@ -331,6 +486,48 @@ The server is configured via environment variables:
 
 > **Warning**: The server will reject requests to protected endpoints if the `API_KEY` environment variable is not set.
 
+### 🔧 Advanced Configuration
+
+**📂 Custom Model Paths:**
+You can configure F5TTSWrapper with custom paths in `tts_server.py`:
+
+```python
+MODEL_CONFIG = {
+    # Auto-download EraX model (default)
+    "ckpt_path": None,  # None = auto-download EraX
+    "vocab_file": None, # None = auto-download EraX vocab
+    
+    # Or use custom model
+    # "ckpt_path": "/path/to/custom_model.safetensors",
+    # "vocab_file": "/path/to/custom_vocab.txt",
+    
+    # HuggingFace cache configuration
+    "hf_cache_dir": "./hf_cache",
+    
+    # Device configuration
+    "device": "auto",  # auto, cuda, cpu
+}
+```
+
+**📁 Custom Storage Directories:**
+```python
+# In tts_server.py
+CUSTOM_REF_PATH = "./references"  # Directory for custom references
+REF_AUDIO_CONFIGS = {
+    "default_vi": {"path": "./ref_audios/default_vi.wav", "text": "..."},
+    # Add other default references
+}
+```
+
+**🌐 Network Configuration:**
+```bash
+# Change host and port
+python tts_server.py --host 0.0.0.0 --port 8080
+
+# Or via Docker
+docker run -p 8080:8000 your-tts-image
+```
+
 ## API Usage
 
 ### Authentication
@@ -359,10 +556,16 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 
 The file `test_audio.wav` will be created in your current directory.
 
-### Example: Uploading a New Voice
+### Example: Uploading a New Voice (Custom Reference)
 
-You can dynamically add a new voice by uploading an audio file (`.wav` or `.mp3`).
+You can dynamically add a new voice by uploading an audio file (`.wav`, `.mp3`, `.flac`, etc.).
 
+**📋 Requirements for Custom Reference:**
+- Audio file: 5-15 seconds, good quality
+- Supported formats: `.wav`, `.mp3`, `.flac`, `.ogg`, `.aac`, `.mp4`
+- Transcript (optional but recommended): Exact text content of the audio
+
+**💻 Using API:**
 ```bash
 # Replace <YOUR_API_KEY> with the key you configured
 curl -X POST http://localhost:8000/v1/upload_reference \
@@ -371,7 +574,36 @@ curl -X POST http://localhost:8000/v1/upload_reference \
 -F "text=The transcribed text corresponding to the audio file."
 ```
 
-The response will contain the `ref_id` for the new voice, e.g., `custom_1678886400`. You can use this `ref_id` as the `voice` value in subsequent requests.
+**🌐 Using Web Interface:**
+1. Open browser at `http://localhost:8000`
+2. Switch to "**Custom Reference**" tab
+3. Select audio file (5-15 seconds)
+4. Enter transcript (optional)
+5. Click "**Upload & Process**"
+6. New voice will appear in Voice Reference dropdown
+
+**📁 Storage Location:**
+Custom references are saved in `./references/` directory with format:
+```
+references/
+├── custom_1678886400.wav  # Auto-generated ID
+├── custom_1678886401.mp3
+└── ...
+```
+
+**🔄 Using Custom Reference:**
+After successful upload, use the returned `ref_id` as the `voice` value:
+```bash
+curl -X POST http://localhost:8000/v1/audio/speech \
+-H "Authorization: Bearer <YOUR_API_KEY>" \
+-H "Content-Type: application/json" \
+-d '{
+    "model": "F5TTS_v1_Base",
+    "input": "Text to synthesize speech.",
+    "voice": "custom_1678886400",  # <-- Use ref_id
+    "response_format": "wav"
+}'
+```
 
 ## Endpoints
 
@@ -385,5 +617,52 @@ All API endpoints are prefixed with `/v1`.
 | `GET` | `/references` | No | Get a list of available voices and their status. |
 | `GET` | `/health` | No | Check the health status of the server. |
 | `GET` | `/` | No | A simple web client for testing. |
+
+## 🔧 Troubleshooting
+
+### Model Download Issues
+
+**🚫 Download Failed:**
+```bash
+❌ Failed to download EraX model: HTTP 403 Forbidden
+💡 Please manually download from: https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models
+```
+**Solution:** Manually download and place files in `erax-ai_model/` directory.
+
+**🐌 Slow Download:**
+- Use custom HuggingFace cache: `hf_cache_dir="./hf_cache"`
+- Check internet connection
+- Try downloading during off-peak hours
+
+### Custom Reference Issues
+
+**📄 Unsupported File Format:**
+```bash
+❌ Error: Unsupported audio format
+```
+**Solution:** Convert to supported formats: `.wav`, `.mp3`, `.flac`, `.ogg`, `.aac`, `.mp4`
+
+**⏱️ Audio Too Long/Short:**
+```bash
+❌ Audio duration should be 5-15 seconds
+```
+**Solution:** Trim audio to recommended length for best results.
+
+**🔊 Poor Audio Quality:**
+- Use high-quality audio (44.1kHz or 48kHz)
+- Avoid background noise
+- Ensure clear speech
+
+### Performance Issues
+
+**💾 Out of Memory:**
+- Reduce `nfe_step` parameter (default: 32)
+- Use smaller batch sizes
+- Enable CPU offloading
+
+**🐢 Slow Generation:**
+- Use GPU if available
+- Reduce `cfg_strength` for faster generation
+- Optimize `cross_fade_duration`
 
 ---

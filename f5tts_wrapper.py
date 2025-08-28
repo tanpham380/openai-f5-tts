@@ -2,6 +2,8 @@ import os
 import torch
 import torchaudio
 import numpy as np
+import tempfile
+import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Optional, Union, List, Tuple, Dict
 
@@ -101,28 +103,36 @@ class F5TTSWrapper:
         
         # Load model configuration
         if ckpt_path is None:
-            repo_name = "F5-TTS"
-            ckpt_step = 1250000
-            ckpt_type = "safetensors"
+            # Mark that we need to check for EraX vocab later
+            self._vocab_file_not_set = (vocab_file is None)
             
-            # Adjust for previous models
-            if model_name == "F5TTS_v1_Custom_Prune_14":
-                if vocoder_name == "vocos":
-                    ckpt_step = 1200000
-            elif model_name == "F5TTS_Base":
-                if vocoder_name == "vocos":
-                    ckpt_step = 1200000
-                elif vocoder_name == "bigvgan":
-                    model_name = "F5TTS_Base_bigvgan"
-                    ckpt_type = "pt"
-            elif model_name == "E2TTS_Base":
-                repo_name = "E2-TTS"
-                ckpt_step = 1200000
-            else:
-                 if vocoder_name == "vocos":
-                    ckpt_step = 1200000
+            # Check for EraX model first (local or auto-download)
+            ckpt_path = self._get_erax_model_path(hf_cache_dir)
+            
+            # If not EraX model, use standard F5TTS models
+            if ckpt_path is None:
+                repo_name = "F5-TTS"
+                ckpt_step = 1250000
+                ckpt_type = "safetensors"
                 
-            ckpt_path = str(cached_path(f"hf://SWivid/{repo_name}/{model_name}/model_{ckpt_step}.{ckpt_type}"))
+                # Adjust for previous models
+                if model_name == "F5TTS_v1_Custom_Prune_14":
+                    if vocoder_name == "vocos":
+                        ckpt_step = 1200000
+                elif model_name == "F5TTS_Base":
+                    if vocoder_name == "vocos":
+                        ckpt_step = 1200000
+                    elif vocoder_name == "bigvgan":
+                        model_name = "F5TTS_Base_bigvgan"
+                        ckpt_type = "pt"
+                elif model_name == "E2TTS_Base":
+                    repo_name = "E2-TTS"
+                    ckpt_step = 1200000
+                else:
+                     if vocoder_name == "vocos":
+                        ckpt_step = 1200000
+                    
+                ckpt_path = str(cached_path(f"hf://SWivid/{repo_name}/{model_name}/model_{ckpt_step}.{ckpt_type}"))
         
         # Load model configuration
         if "custom" not in model_name.lower(): 
@@ -136,7 +146,16 @@ class F5TTSWrapper:
         
         # Load tokenizer
         if vocab_file is None:
-            vocab_file = str(files("f5_tts").joinpath("infer/examples/vocab.txt"))
+            # Check if we have EraX vocab from auto-download
+            if hasattr(self, '_erax_vocab_file') and self._erax_vocab_file:
+                vocab_file = self._erax_vocab_file
+                print(f"✅ Using EraX vocab file: {vocab_file}")
+            else:
+                vocab_file = str(files("f5_tts").joinpath("infer/examples/vocab.txt"))
+                print(f"📁 Using default vocab file: {vocab_file}")
+        else:
+            print(f"📁 Using custom vocab file: {vocab_file}")
+        
         tokenizer_type = "custom"
         self.vocab_char_map, vocab_size = get_tokenizer(vocab_file, tokenizer_type)
         
@@ -197,6 +216,69 @@ class F5TTSWrapper:
         self.sway_sampling_coef = -1.0
         self.speed = 1.0
         self.fix_duration = None
+
+    def _get_erax_model_path(self, hf_cache_dir=None):
+        """
+        Get EraX model path, auto-downloading if not exists locally.
+        
+        Args:
+            hf_cache_dir: HuggingFace cache directory
+            
+        Returns:
+            Path to EraX model file, or None if not found/downloaded
+        """
+        # Check local path first
+        local_model_dir = Path("./erax-ai_model")
+        local_model_file = local_model_dir / "model_48000.safetensors"
+        local_vocab_file = local_model_dir / "vocab.txt"
+        
+        if local_model_file.exists() and local_vocab_file.exists():
+            print(f"✅ Found EraX model locally: {local_model_file}")
+            # Also set vocab_file if not already set
+            if getattr(self, '_vocab_file_not_set', False):
+                self._erax_vocab_file = str(local_vocab_file)
+            return str(local_model_file)
+        
+        # Try to auto-download from HuggingFace
+        print("🔍 EraX model not found locally. Attempting to download from HuggingFace...")
+        try:
+            from huggingface_hub import hf_hub_download
+            import shutil
+            
+            # Create local directory
+            local_model_dir.mkdir(exist_ok=True)
+            
+            # Download model file
+            if not local_model_file.exists():
+                print("📥 Downloading model_48000.safetensors from erax-ai/EraX-Smile-UnixSex-F5...")
+                downloaded_model = hf_hub_download(
+                    repo_id="erax-ai/EraX-Smile-UnixSex-F5",
+                    filename="models/model_48000.safetensors",
+                    cache_dir=hf_cache_dir or "./hf_cache"
+                )
+                shutil.copy2(downloaded_model, local_model_file)
+                print(f"✅ Model downloaded to: {local_model_file}")
+            
+            # Download vocab file
+            if not local_vocab_file.exists():
+                print("📥 Downloading vocab.txt from erax-ai/EraX-Smile-UnixSex-F5...")
+                downloaded_vocab = hf_hub_download(
+                    repo_id="erax-ai/EraX-Smile-UnixSex-F5", 
+                    filename="models/vocab.txt",
+                    cache_dir=hf_cache_dir or "./hf_cache"
+                )
+                shutil.copy2(downloaded_vocab, local_vocab_file)
+                print(f"✅ Vocab downloaded to: {local_vocab_file}")
+            
+            # Set vocab file for later use
+            self._erax_vocab_file = str(local_vocab_file)
+            print("🎉 EraX model download completed successfully!")
+            return str(local_model_file)
+            
+        except Exception as e:
+            print(f"❌ Failed to download EraX model: {e}")
+            print("💡 Please manually download from: https://huggingface.co/erax-ai/EraX-Smile-UnixSex-F5/tree/main/models")
+            return None
 
     def _load_checkpoint(self, model, ckpt_path, dtype=None, use_ema=True):
         """
@@ -304,7 +386,6 @@ class F5TTSWrapper:
         aseg = self._remove_silence_edges(aseg) + AudioSegment.silent(duration=50)
         
         # Export to temporary file and load as tensor
-        import tempfile
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
             aseg.export(tmp_file.name, format="wav")
             processed_audio_path = tmp_file.name
@@ -472,7 +553,7 @@ class F5TTSWrapper:
             # Adjust speed for very short texts
             local_speed = speed
             if len(text_batch.encode("utf-8")) < 10:
-                local_speed = 0.3
+                local_speed = speed * 0.8
                 
             # Prepare the text
             text_list = [self.ref_text + text_batch]
@@ -480,28 +561,14 @@ class F5TTSWrapper:
             
             # Calculate duration
             if fix_duration is not None:
-                # Fixed duration takes precedence
                 duration = int(fix_duration * self.target_sample_rate / self.hop_length)
-                print(f"Using fixed duration: {fix_duration}s ({duration} frames)")
             elif can_use_predictor:
-                # Convert text to tokens for duration predictor
-                if isinstance(final_text_list[0], str):
-                    text_tokens = list_str_to_idx(final_text_list, self.vocab_char_map).to(self.device)
-                else:
-                    text_tokens = torch.tensor(final_text_list, device=self.device)
-                
-                # Get text lengths
-                text_lengths = torch.tensor([len(t) for t in final_text_list], device=self.device)
-                
-                # Calculate duration using predictor
+                text_tokens = list_str_to_idx(final_text_list, self.vocab_char_map)[0]
+                text_lengths = torch.tensor([len(text_tokens)], device=self.device)
+                text_tokens = torch.tensor([text_tokens], device=self.device)
                 duration = self.calculate_duration_with_predictor(text_tokens, text_lengths, local_speed)
-                print(f"Duration predictor output: {duration} frames")
             else:
-                # Calculate duration based on text length ratio (fallback method)
-                ref_text_len = len(self.ref_text.encode("utf-8"))
-                gen_text_len = len(text_batch.encode("utf-8"))
-                duration = self.ref_audio_len + int(self.ref_audio_len / ref_text_len * gen_text_len / local_speed)
-                print(f"Calculated duration based on text ratio: {duration} frames")
+                duration = self.ref_audio_len + int(len(text_batch) / len(self.ref_text) * self.ref_audio_len / local_speed)
                 
             # Generate audio
             with torch.inference_mode():
@@ -514,101 +581,60 @@ class F5TTSWrapper:
                     sway_sampling_coef=sway_sampling_coef,
                 )
                 
-                # Process the generated mel spectrogram
-                generated = generated.to(torch.float32)
-                generated = generated[:, self.ref_audio_len:, :]
-                generated = generated.permute(0, 2, 1)
-                
-                # Convert to audio
-                if self.mel_spec_type == "vocos":
-                    generated_wave = self.vocoder.decode(generated)
-                elif self.mel_spec_type == "bigvgan":
-                    generated_wave = self.vocoder(generated)
-                    
-                # Normalize volume if needed
-                rms = torch.sqrt(torch.mean(torch.square(self.ref_audio_processed)))
-                if rms < self.target_rms:
-                    generated_wave = generated_wave * rms / self.target_rms
-                    
-                # Convert to numpy and append to list
-                generated_wave = generated_wave.squeeze().cpu().numpy()
-                generated_waves.append(generated_wave)
-                
-                # Store spectrogram if needed
-                if return_spectrogram or output_path is not None:
-                    spectrograms.append(generated.squeeze().cpu().numpy())
+            generated_waves.append(generated[:, self.ref_audio_len:, :])
+            if return_spectrogram:
+                spectrograms.append(generated[0, self.ref_audio_len:, :].cpu().numpy())
         
         # Combine all segments
         if generated_waves:
             if cross_fade_duration <= 0:
-                # Simply concatenate
-                final_wave = np.concatenate(generated_waves)
+                generated_wave = torch.cat(generated_waves, dim=1)
             else:
-                # Cross-fade between segments
-                final_wave = generated_waves[0]
+                generated_wave = generated_waves[0]
                 for i in range(1, len(generated_waves)):
-                    prev_wave = final_wave
+                    prev_wave = generated_wave
                     next_wave = generated_waves[i]
-                    
-                    # Calculate cross-fade samples
-                    cross_fade_samples = int(cross_fade_duration * self.target_sample_rate)
-                    cross_fade_samples = min(cross_fade_samples, len(prev_wave), len(next_wave))
-                    
-                    if cross_fade_samples <= 0:
-                        # No overlap possible, concatenate
-                        final_wave = np.concatenate([prev_wave, next_wave])
-                        continue
-                        
-                    # Create cross-fade
-                    prev_overlap = prev_wave[-cross_fade_samples:]
-                    next_overlap = next_wave[:cross_fade_samples]
-                    
-                    fade_out = np.linspace(1, 0, cross_fade_samples)
-                    fade_in = np.linspace(0, 1, cross_fade_samples)
-                    
-                    cross_faded_overlap = prev_overlap * fade_out + next_overlap * fade_in
-                    
-                    final_wave = np.concatenate([
-                        prev_wave[:-cross_fade_samples], 
-                        cross_faded_overlap, 
-                        next_wave[cross_fade_samples:]
-                    ])
+                    cross_fade_samples = int(cross_fade_duration * self.target_sample_rate / self.hop_length)
+                    if prev_wave.shape[1] > cross_fade_samples and next_wave.shape[1] > cross_fade_samples:
+                        fade_out_prev = prev_wave[:, -cross_fade_samples:, :] * torch.linspace(1, 0, cross_fade_samples, device=self.device).unsqueeze(0).unsqueeze(-1)
+                        fade_in_next = next_wave[:, :cross_fade_samples, :] * torch.linspace(0, 1, cross_fade_samples, device=self.device).unsqueeze(0).unsqueeze(-1)
+                        cross_faded = fade_out_prev + fade_in_next
+                        generated_wave = torch.cat([prev_wave[:, :-cross_fade_samples, :], cross_faded, next_wave[:, cross_fade_samples:, :]], dim=1)
+                    else:
+                        generated_wave = torch.cat([generated_wave, next_wave], dim=1)
             
             # Combine spectrograms if needed
             if return_spectrogram or output_path is not None:
-                combined_spectrogram = np.concatenate(spectrograms, axis=1)
+                final_spectrogram = np.concatenate(spectrograms, axis=0) if spectrograms else None
                 
             # Save to file if path provided
             if output_path is not None:
-                output_dir = os.path.dirname(output_path)
-                if output_dir and not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-                
-                # Save audio
-                torchaudio.save(output_path, 
-                                torch.tensor(final_wave).unsqueeze(0), 
-                                self.target_sample_rate)
-                
-                # Save spectrogram if needed
+                generated_mel_spec = generated_wave.permute(0, 2, 1)
+                generated_wave = self.vocoder.decode(generated_mel_spec)
+                if generated_wave.dim() > 1:
+                    generated_wave = generated_wave.squeeze()
+                torchaudio.save(output_path, generated_wave.unsqueeze(0).cpu(), self.target_sample_rate)
                 if return_spectrogram:
-                    spectrogram_path = os.path.splitext(output_path)[0] + '_spec.png'
-                    self._save_spectrogram(combined_spectrogram, spectrogram_path)
-                
-                if not return_numpy:
-                    return output_path
+                    spec_path = output_path.replace('.wav', '_spectrogram.png')
+                    self._save_spectrogram(final_spectrogram, spec_path)
+                return output_path
             
-            # Return as requested
-            if return_spectrogram:
-                return final_wave, self.target_sample_rate, combined_spectrogram
-            else:
-                return final_wave, self.target_sample_rate
-            
+            # Return numpy array if requested
+            if return_numpy:
+                generated_mel_spec = generated_wave.permute(0, 2, 1)
+                generated_wave = self.vocoder.decode(generated_mel_spec)
+                if generated_wave.dim() > 1:
+                    generated_wave = generated_wave.squeeze()
+                audio_array = generated_wave.cpu().numpy()
+                if return_spectrogram:
+                    return audio_array, self.target_sample_rate, final_spectrogram
+                return audio_array, self.target_sample_rate
+        
         else:
-            raise RuntimeError("No audio generated")
+            raise RuntimeError("No audio was generated")
     
     def _save_spectrogram(self, spectrogram, path):
         """Save spectrogram as image"""
-        import matplotlib.pyplot as plt
         plt.figure(figsize=(12, 4))
         plt.imshow(spectrogram, origin="lower", aspect="auto")
         plt.colorbar()

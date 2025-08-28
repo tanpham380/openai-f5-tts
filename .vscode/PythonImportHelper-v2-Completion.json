@@ -36,6 +36,24 @@
         "documentation": {}
     },
     {
+        "label": "tempfile",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tempfile",
+        "description": "tempfile",
+        "detail": "tempfile",
+        "documentation": {}
+    },
+    {
+        "label": "matplotlib.pyplot",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "matplotlib.pyplot",
+        "description": "matplotlib.pyplot",
+        "detail": "matplotlib.pyplot",
+        "documentation": {}
+    },
+    {
         "label": "Path",
         "importPath": "pathlib",
         "description": "pathlib",
@@ -476,6 +494,24 @@
         "documentation": {}
     },
     {
+        "label": "requests",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "requests",
+        "description": "requests",
+        "detail": "requests",
+        "documentation": {}
+    },
+    {
+        "label": "uvicorn",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "uvicorn",
+        "description": "uvicorn",
+        "detail": "uvicorn",
+        "documentation": {}
+    },
+    {
         "label": "F5TTSWrapper",
         "kind": 6,
         "importPath": "f5tts_wrapper",
@@ -525,7 +561,7 @@
         "kind": 5,
         "importPath": "tts_server",
         "description": "tts_server",
-        "peekOfCode": "MODEL_CONFIG = {\n    \"model_name\": \"F5TTS_v1_Base\",  # Use F5TTS_v1_Base for EraX models\n    \"vocoder_name\": \"vocos\",  # Using Vocos vocoder as in example\n    \"ckpt_path\": \"./erax-ai_model/model_48000.safetensors\",  # Path to your EraX model\n    \"vocab_file\": \"./erax-ai_model/vocab.txt\",  # Path to vocab file in your folder\n    \"use_ema\": True,  # Set to True for better quality (corrected from example)\n    \"target_sample_rate\": 24000,  # Output sample rate (24kHz is standard)\n    \"use_duration_predictor\": False,  # Standard setting\n    # Additional parameters from example code for better compatibility\n    \"n_mel_channels\": 100,  # Number of mel-spectrogram channels",
+        "peekOfCode": "MODEL_CONFIG = {\n    \"model_name\": \"F5TTS_v1_Base\",  # Use F5TTS_v1_Base for EraX models\n    \"vocoder_name\": \"vocos\",  # Using Vocos vocoder as in example\n    \"ckpt_path\": None,  # Will be set after auto-download\n    \"vocab_file\": None,  # Will be set after auto-download\n    \"use_ema\": True,  # Set to True for better quality (corrected from example)\n    \"target_sample_rate\": 24000,  # Output sample rate (24kHz is standard)\n    \"use_duration_predictor\": False,  # Standard setting\n    # Additional parameters from example code for better compatibility\n    \"n_mel_channels\": 100,  # Number of mel-spectrogram channels",
         "detail": "tts_server",
         "documentation": {}
     },

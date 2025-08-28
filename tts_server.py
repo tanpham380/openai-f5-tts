@@ -22,13 +22,29 @@ import gc
 
 # Import F5TTS wrapper
 from f5tts_wrapper import F5TTSWrapper
+import os
+import requests
+import time
+import io
+import wave
+import asyncio
+import gc
+import traceback
+import uvicorn
+import argparse
+import tempfile
+import numpy as np
+import torch
+import torchaudio
+
+
 
 # --- Configuration ---
 MODEL_CONFIG = {
     "model_name": "F5TTS_v1_Base",  # Use F5TTS_v1_Base for EraX models
     "vocoder_name": "vocos",  # Using Vocos vocoder as in example
-    "ckpt_path": "./erax-ai_model/model_48000.safetensors",  # Path to your EraX model
-    "vocab_file": "./erax-ai_model/vocab.txt",  # Path to vocab file in your folder
+    "ckpt_path": None,  # Will be set after auto-download
+    "vocab_file": None,  # Will be set after auto-download
     "use_ema": True,  # Set to True for better quality (corrected from example)
     "target_sample_rate": 24000,  # Output sample rate (24kHz is standard)
     "use_duration_predictor": False,  # Standard setting
@@ -37,7 +53,8 @@ MODEL_CONFIG = {
     "hop_length": 256,      # Hop length for audio processing
     "win_length": 1024,     # Window length for STFT
     "n_fft": 1024,         # FFT size
-    "ode_method": "euler"   # ODE solver method
+    "ode_method": "euler",   # ODE solver method
+    "hf_cache_dir": "./hf_cache"  # Cache directory for HuggingFace downloads
 }
 
 DEFAULT_REFERENCES = {
@@ -232,6 +249,7 @@ async def startup_event():
         print("="*80)
     
     try:
+        print("🔍 Initializing F5TTS with automatic EraX model detection...")
         print(f"Loading F5TTS model with config: {MODEL_CONFIG}")
         tts_model = F5TTSWrapper(**MODEL_CONFIG)
         print(f"F5TTS model loaded successfully. Device: {tts_model.device}")
