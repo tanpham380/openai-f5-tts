@@ -55,9 +55,11 @@ MODEL_CONFIG = {
     "win_length": 1024,     # Window length for STFT
     "n_fft": 1024,         # FFT size
     "ode_method": "euler",   # ODE solver method
-    "hf_cache_dir": "./hf_cache",  # Cache directory for HuggingFace downloads
-    "force_float32": True  # Force float32 to avoid dtype mismatch errors
+    "hf_cache_dir": "./hf_cache"  # Cache directory for HuggingFace downloads
 }
+
+# Separate flag for dtype fixing
+FORCE_FLOAT32 = True  # Fix dtype mismatches
 
 DEFAULT_REFERENCES = {
     "default_vi": {
@@ -314,8 +316,8 @@ async def startup_event():
         print(f"Loading F5TTS model with config: {MODEL_CONFIG}")
         tts_model = F5TTSWrapper(**MODEL_CONFIG)
         
-        # Fix dtype mismatches if force_float32 is enabled
-        if MODEL_CONFIG.get("force_float32", False):
+        # Fix dtype mismatches if FORCE_FLOAT32 is enabled
+        if FORCE_FLOAT32:
             print("🔧 Applying float32 dtype fixes to prevent tensor mismatch errors...")
             if hasattr(tts_model, 'vocoder'):
                 for param in tts_model.vocoder.parameters():
