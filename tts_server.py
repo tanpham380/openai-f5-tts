@@ -55,7 +55,8 @@ MODEL_CONFIG = {
     "win_length": 1024,     # Window length for STFT
     "n_fft": 1024,         # FFT size
     "ode_method": "euler",   # ODE solver method
-    "hf_cache_dir": "./hf_cache"  # Cache directory for HuggingFace downloads
+    "hf_cache_dir": "./hf_cache",  # Cache directory for HuggingFace downloads
+    "force_float32": True  # Force float32 to avoid dtype mismatch errors
 }
 
 DEFAULT_REFERENCES = {
