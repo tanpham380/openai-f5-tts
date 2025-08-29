@@ -313,6 +313,19 @@ async def startup_event():
         print("🔍 Initializing F5TTS with automatic EraX model detection...")
         print(f"Loading F5TTS model with config: {MODEL_CONFIG}")
         tts_model = F5TTSWrapper(**MODEL_CONFIG)
+        
+        # Fix dtype mismatches if force_float32 is enabled
+        if MODEL_CONFIG.get("force_float32", False):
+            print("🔧 Applying float32 dtype fixes to prevent tensor mismatch errors...")
+            if hasattr(tts_model, 'vocoder'):
+                for param in tts_model.vocoder.parameters():
+                    if param.dtype == torch.float16:
+                        param.data = param.data.float()
+                for name, buffer in tts_model.vocoder.named_buffers():
+                    if buffer.dtype == torch.float16:
+                        buffer.data = buffer.data.float()
+                print("✅ Vocoder dtype fixed to float32")
+        
         print(f"F5TTS model loaded successfully. Device: {tts_model.device}")
         await load_default_references()
         DEFAULT_SAMPLE_RATE = MODEL_CONFIG.get("target_sample_rate", 24000)
