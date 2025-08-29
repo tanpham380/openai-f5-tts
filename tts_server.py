@@ -267,17 +267,9 @@ async def model_context(ref_id: str):
                     print(f"Warning: Converting mel tensor from {tts_model.ref_audio_processed.dtype} to {target_dtype}")
                     tts_model.ref_audio_processed = tts_model.ref_audio_processed.to(dtype=target_dtype)
             
-            # Ensure vocoder uses consistent dtype
+            # **CORRECTED** Ensure vocoder is consistently float32 to prevent runtime errors
             if hasattr(tts_model, 'vocoder'):
-                # Force vocoder to use float32 to avoid dtype mismatches
-                for param in tts_model.vocoder.parameters():
-                    if param.dtype == torch.float16:
-                        param.data = param.data.float()
-                        
-                # Also handle buffers in vocoder
-                for name, buffer in tts_model.vocoder.named_buffers():
-                    if buffer.dtype == torch.float16:
-                        buffer.data = buffer.data.float()
+                tts_model.vocoder = tts_model.vocoder.float()
             
             print(f"[Model Context] Set reference state for '{ref_id}'. Mel shape: {tts_model.ref_audio_processed.shape}, dtype: {tts_model.ref_audio_processed.dtype}")
             yield tts_model
@@ -318,15 +310,11 @@ async def startup_event():
         
         # Fix dtype mismatches if FORCE_FLOAT32 is enabled
         if FORCE_FLOAT32:
-            print("🔧 Applying float32 dtype fixes to prevent tensor mismatch errors...")
+            print("🔧 Applying float32 dtype fix to the vocoder...")
             if hasattr(tts_model, 'vocoder'):
-                for param in tts_model.vocoder.parameters():
-                    if param.dtype == torch.float16:
-                        param.data = param.data.float()
-                for name, buffer in tts_model.vocoder.named_buffers():
-                    if buffer.dtype == torch.float16:
-                        buffer.data = buffer.data.float()
-                print("✅ Vocoder dtype fixed to float32")
+                # **CORRECTED** More robustly cast the entire vocoder module to float32
+                tts_model.vocoder = tts_model.vocoder.float()
+                print("✅ Vocoder dtype robustly fixed to float32")
         
         print(f"F5TTS model loaded successfully. Device: {tts_model.device}")
         await load_default_references()

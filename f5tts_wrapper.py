@@ -609,7 +609,7 @@ class F5TTSWrapper:
                 
             # Save to file if path provided
             if output_path is not None:
-                generated_mel_spec = generated_wave.permute(0, 2, 1)
+                generated_mel_spec = generated_wave.permute(0, 2, 1).float()
                 generated_wave = self.vocoder.decode(generated_mel_spec)
                 if generated_wave.dim() > 1:
                     generated_wave = generated_wave.squeeze()
@@ -621,7 +621,7 @@ class F5TTSWrapper:
             
             # Return numpy array if requested
             if return_numpy:
-                generated_mel_spec = generated_wave.permute(0, 2, 1)
+                generated_mel_spec = generated_wave.permute(0, 2, 1).float()
                 generated_wave = self.vocoder.decode(generated_mel_spec)
                 if generated_wave.dim() > 1:
                     generated_wave = generated_wave.squeeze()
