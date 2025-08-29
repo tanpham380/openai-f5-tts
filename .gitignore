@@ -1,1 +1,4 @@
 erax-ai_model/model_48000.safetensors
+erax-ai_model/*
+hf_cache/*
+*.pyc

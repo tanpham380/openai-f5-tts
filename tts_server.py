@@ -14,8 +14,8 @@ import io
 import wave
 from vinorm import TTSnorm
 import torch
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 import traceback
+import re
 from pathlib import Path
 from contextlib import asynccontextmanager
 import gc
@@ -58,21 +58,31 @@ MODEL_CONFIG = {
 }
 
 DEFAULT_REFERENCES = {
-    "male": {
-        "audio": "./male_south_TEACH_chunk_0_segment_684.wav",
-        "text": "Người người hô hào thay đổi phương pháp giảng dạy. Bộ giáo dục và đào tạo Việt Nam không thiếu những dự án nhằm thay đổi diện mạo giáo dục nước nhà. Nhưng trong khi những thành quả đổi mới còn chưa kịp thu về, thì những ví dụ điển hình về bước lùi của giáo dục ngày càng hiện rõ.",
-        "name": "Male Voice (South)"
+    "default_vi": {
+        "audio": "./ref_audios/default_vi.wav",
+        "text": "./ref_audios/default_vi.txt",
+        "name": "Default Vietnamese"
     },
-    "female": {
-        "audio": "./female-vts.wav",
-        "text": "Ai đã đến Hàng Dương, đều không thể cầm lòng về những nấm mộ chen nhau, nhấp nhô trải khắp một vùng đồi. Những nấm mộ có tên và không tên, nhưng nấm mộ lấp ló trong lùm cây, bụi cỏ.",
-        "name": "Female Voice (VTS)"
+    "default_zh": {
+        "audio": "./ref_audios/default_zh.wav",
+        "text": "./ref_audios/default_zh.txt",
+        "name": "Default Chinese"
+    },
+    "leijun": {
+        "audio": "./ref_audios/leijun.wav",
+        "text": "./ref_audios/leijun.txt",
+        "name": "Lei Jun"
+    },
+    "wukong": {
+        "audio": "./ref_audios/wukong.wav",
+        "text": "./ref_audios/wukong.txt",
+        "name": "Wukong"
     }
 }
 
-CUSTOM_REF_PATH = "./references"
-TEXT_SPLITTER_CHUNK_SIZE = 100
-TEXT_SPLITTER_CHUNK_OVERLAP = 0
+CUSTOM_REF_PATH = "./ref_audios"
+TEXT_SPLITTER_CHUNK_SIZE = 200
+TEXT_SPLITTER_CHUNK_OVERLAP = 20
 
 # Global variables
 DEFAULT_SAMPLE_RATE = 24000
@@ -146,6 +156,36 @@ app.add_middleware(
 )
 
 # --- Utility Functions ---
+def chunk_text(text, max_chars=135):
+    """
+    Splits the input text into chunks, each with a maximum number of characters.
+    Based on viF5TTS implementation.
+
+    Args:
+        text (str): The text to be split.
+        max_chars (int): The maximum number of characters per chunk.
+
+    Returns:
+        List[str]: A list of text chunks.
+    """
+    chunks = []
+    current_chunk = ""
+    # Split the text into sentences based on punctuation followed by whitespace
+    sentences = re.split(r"(?<=[;:,.!?])\s+|(?<=[；：，。！？])", text)
+
+    for sentence in sentences:
+        if len(current_chunk.encode("utf-8")) + len(sentence.encode("utf-8")) <= max_chars:
+            current_chunk += sentence + " " if sentence and len(sentence[-1].encode("utf-8")) == 1 else sentence
+        else:
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+            current_chunk = sentence + " " if sentence and len(sentence[-1].encode("utf-8")) == 1 else sentence
+
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+
+    return chunks
+
 def create_wave_header(sample_rate, num_channels=1, bits_per_sample=16, data_size=0):
     """Create a wave header for streaming. data_size=0 means unknown size."""
     buffer = io.BytesIO()
@@ -168,12 +208,11 @@ def create_wave_header(sample_rate, num_channels=1, bits_per_sample=16, data_siz
 
 def process_chunk(chunk_text: str, model: F5TTSWrapper, request: TTSRequest) -> Optional[bytes]:
     """Process a single text chunk and return raw audio bytes (int16)"""
+    # Clean and normalize the text
     chunk_text = TTSnorm(chunk_text).strip()
-    if not chunk_text or chunk_text == ".":
-        return None
-    if chunk_text.endswith(".."):
-        chunk_text = chunk_text[:-1].strip()
-    if not chunk_text:
+    
+    # Skip empty chunks
+    if not chunk_text or len(chunk_text.strip()) < 3:
         return None
 
     print(f"  Synthesizing chunk: '{chunk_text}'")
@@ -229,12 +268,6 @@ reference_processing_lock = asyncio.Lock()
 request_semaphore = asyncio.Semaphore(3)
 background_semaphore = asyncio.Semaphore(2)
 
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=TEXT_SPLITTER_CHUNK_SIZE, chunk_overlap=TEXT_SPLITTER_CHUNK_OVERLAP,
-    length_function=len, separators=["\n\n", "\n", ". ", "! ", "? ", "; ", ", ", " ", ""],
-    keep_separator=True
-)
-
 # --- Startup Event ---
 @app.on_event("startup")
 async def startup_event():
@@ -269,17 +302,25 @@ async def load_default_references():
         for ref_id, ref_data in DEFAULT_REFERENCES.items():
             try:
                 audio_path = ref_data["audio"]
+                text_path = ref_data["text"]
+                
                 if os.path.exists(audio_path):
+                    # Read text from file if text_path is provided
+                    ref_text = ""
+                    if os.path.exists(text_path):
+                        with open(text_path, 'r', encoding='utf-8') as f:
+                            ref_text = f.read().strip()
+                    
                     async with model_lock:
                         try:
                             _, _ = tts_model.preprocess_reference(
                                 ref_audio_path=audio_path,
-                                ref_text=TTSnorm(ref_data.get("text", "")).strip(),
+                                ref_text=TTSnorm(ref_text).strip(),
                                 clip_short=False
                             )
                             reference_cache[ref_id] = {
                                 "ref_audio_path": audio_path,
-                                "ref_text_original": ref_data.get("text", ""), "loaded": True,
+                                "ref_text_original": ref_text, "loaded": True,
                                 "name": ref_data.get("name", ref_id),
                                 "processed_mel": tts_model.ref_audio_processed.clone().detach(),
                                 "processed_text": tts_model.ref_text,
@@ -294,7 +335,7 @@ async def load_default_references():
                                 if torch.cuda.is_available(): torch.cuda.empty_cache()
                                 gc.collect()
                 else:
-                    reference_cache[ref_id] = {"loaded": False, "name": ref_data.get("name", ref_id), "error": "File not found"}
+                    reference_cache[ref_id] = {"loaded": False, "name": ref_data.get("name", ref_id), "error": "Audio file not found"}
             except Exception as e:
                 reference_cache[ref_id] = {"loaded": False, "name": ref_data.get("name", ref_id), "error": str(e)}
     print("Default reference processing complete.")
@@ -311,13 +352,14 @@ async def stream_audio_generator(request: TTSRequest) -> AsyncGenerator[bytes, N
             normalized_text = TTSnorm(request.text).strip()
         except Exception: normalized_text = request.text.strip()
         
-        text_chunks = text_splitter.split_text(normalized_text)
+        # Use viF5TTS chunking method
+        text_chunks = chunk_text(normalized_text, max_chars=135)
         if not text_chunks:
             yield create_wave_header(tts_model.target_sample_rate)
             return
 
         try:
-            async with model_context(request.speaker or "male") as model:
+            async with model_context(request.speaker or "default_vi") as model:
                 yield create_wave_header(sample_rate=model.target_sample_rate, data_size=0)
                 for chunk_text in text_chunks:
                     audio_bytes = process_chunk(chunk_text, model, request)
@@ -440,6 +482,12 @@ async def health_check():
     loaded_refs = sum(1 for data in reference_cache.values() if data.get("loaded") is True)
     if loaded_refs == 0: return {"status": "warning", "message": "Model loaded, but no reference voices are ready."}
     return {"status": "ok", "message": "F5TTS model ready.", "loaded_references": loaded_refs}
+
+@api_router_v1.get("/model")
+async def get_model_name():
+    """Endpoint to get the name of the current model."""
+    model_name = MODEL_CONFIG.get("model_name", "Unknown")
+    return {"model_name": model_name}
 
 # Include the v1 router in the main app
 app.include_router(api_router_v1)
