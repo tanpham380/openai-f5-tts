@@ -19,6 +19,7 @@ import re
 from pathlib import Path
 from contextlib import asynccontextmanager
 import gc
+from pydub import AudioSegment
 
 # Import F5TTS wrapper
 from f5tts_wrapper import F5TTSWrapper
@@ -156,7 +157,7 @@ app.add_middleware(
 )
 
 # --- Utility Functions ---
-def chunk_text(text, max_chars=135):
+def split_text_into_chunks(text, max_chars=135):
     """
     Splits the input text into chunks, each with a maximum number of characters.
     Based on viF5TTS implementation.
@@ -206,6 +207,23 @@ def create_wave_header(sample_rate, num_channels=1, bits_per_sample=16, data_siz
         header_bytes = buffer.getvalue()
     return header_bytes
 
+def convert_wav_to_mp3(wav_data: bytes, sample_rate: int = 24000, bitrate: str = "128k") -> bytes:
+    """Convert WAV audio data to MP3 format using pydub."""
+    try:
+        # Create AudioSegment from WAV bytes
+        wav_io = io.BytesIO(wav_data)
+        audio = AudioSegment.from_wav(wav_io)
+        
+        # Convert to MP3
+        mp3_io = io.BytesIO()
+        audio.export(mp3_io, format="mp3", bitrate=bitrate)
+        mp3_io.seek(0)
+        
+        return mp3_io.read()
+    except Exception as e:
+        print(f"Error converting WAV to MP3: {e}")
+        raise e
+
 def process_chunk(chunk_text: str, model: F5TTSWrapper, request: TTSRequest) -> Optional[bytes]:
     """Process a single text chunk and return raw audio bytes (int16)"""
     # Clean and normalize the text
@@ -244,15 +262,20 @@ async def model_context(ref_id: str):
             if not cached_ref_data or cached_ref_data.get("loaded") != True:
                 raise ValueError(f"Reference '{ref_id}' not ready")
             
+            # Set model state from cache (similar to viF5TTS approach)
             tts_model.ref_audio_processed = cached_ref_data["processed_mel"]
             tts_model.ref_text = cached_ref_data["processed_text"]
             tts_model.ref_audio_len = cached_ref_data["processed_mel_len"]
             
+            # Ensure tensor device compatibility
             if tts_model.ref_audio_processed.device != tts_model.device:
+                print(f"Warning: Moving cached mel tensor from {tts_model.ref_audio_processed.device} to {tts_model.device}")
                 tts_model.ref_audio_processed = tts_model.ref_audio_processed.to(tts_model.device)
             
+            print(f"[Model Context] Set reference state for '{ref_id}'. Mel shape: {tts_model.ref_audio_processed.shape}")
             yield tts_model
         finally:
+            # Always reset model state after use (like viF5TTS)
             if tts_model:
                 tts_model.ref_audio_processed = None
                 tts_model.ref_text = None
@@ -344,31 +367,113 @@ async def load_default_references():
 async def stream_audio_generator(request: TTSRequest) -> AsyncGenerator[bytes, None]:
     """F5TTS audio stream generator with resource management."""
     start_time = time.time()
+    print(f"[stream_audio_generator] Request received at {start_time:.2f}")
+    
     async with request_semaphore:
-        if tts_model is None: raise HTTPException(503, "TTS model is not ready.")
-        if not request.text or not request.text.strip(): raise HTTPException(400, "Input text cannot be empty.")
+        if tts_model is None: 
+            print("Error: F5TTS model is not initialized.")
+            raise HTTPException(503, "TTS model is not ready.")
+        if not request.text or not request.text.strip(): 
+            print("Error: No text provided in the request.")
+            raise HTTPException(400, "Input text cannot be empty.")
+        
+        print(f"[stream_audio_generator] Speaker selected: '{request.speaker or 'default_vi'}'")
         
         try:
             normalized_text = TTSnorm(request.text).strip()
-        except Exception: normalized_text = request.text.strip()
+            print(f"[stream_audio_generator] Normalized text (first 100 chars): '{normalized_text[:100]}...'")
+        except Exception: 
+            print(f"Warning: Text normalization failed. Proceeding with original text.")
+            normalized_text = request.text.strip()
         
         # Use viF5TTS chunking method
-        text_chunks = chunk_text(normalized_text, max_chars=135)
+        text_chunks = split_text_into_chunks(normalized_text, max_chars=135)
+        num_chunks = len(text_chunks)
+        print(f"[stream_audio_generator] Text split into {num_chunks} chunks.")
+        
         if not text_chunks:
+            print("Warning: Text resulted in zero chunks after splitting.")
             yield create_wave_header(tts_model.target_sample_rate)
             return
 
         try:
             async with model_context(request.speaker or "default_vi") as model:
-                yield create_wave_header(sample_rate=model.target_sample_rate, data_size=0)
-                for chunk_text in text_chunks:
+                sample_rate = model.target_sample_rate
+                print(f"[stream_audio_generator] Starting audio stream generation at {sample_rate} Hz...")
+                
+                yield create_wave_header(sample_rate=sample_rate, data_size=0)
+                print("[stream_audio_generator] WAV header yielded.")
+                
+                total_bytes_yielded = 0
+                for i, chunk_text in enumerate(text_chunks):
+                    chunk_num = i + 1
+                    chunk_start_time = time.time()
+                    print(f"[stream_audio_generator] Processing chunk {chunk_num}/{num_chunks}...")
+                    
                     audio_bytes = process_chunk(chunk_text, model, request)
-                    if audio_bytes: yield audio_bytes
-        except ValueError as ve: raise HTTPException(404, str(ve))
-        except Exception as e: raise HTTPException(500, f"Internal error during audio generation: {e}")
+                    if audio_bytes and len(audio_bytes) > 0:
+                        yield audio_bytes
+                        bytes_yielded = len(audio_bytes)
+                        total_bytes_yielded += bytes_yielded
+                        chunk_duration = time.time() - chunk_start_time
+                        print(f"  [Chunk {chunk_num}] Yielded {bytes_yielded} bytes. Time: {chunk_duration:.3f}s")
+                    else:
+                        print(f"  [Chunk {chunk_num}] Skipped yielding (no audio data generated).")
+                        
+        except ValueError as ve: 
+            print(f"Error: Required processed data not found: {ve}")
+            raise HTTPException(404, str(ve))
+        except Exception as e: 
+            print(f"Internal error during audio generation: {e}")
+            traceback.print_exc()
+            raise HTTPException(500, f"Internal error during audio generation: {e}")
         
         await asyncio.sleep(0.05)
-        print(f"[F5TTS Stream] Request processed in {time.time() - start_time:.3f}s.")
+        total_duration = time.time() - start_time
+        print(f"[stream_audio_generator] Stream generation complete.")
+        print(f"  Total audio bytes yielded: {total_bytes_yielded}")
+        print(f"  Total request processing time: {total_duration:.3f} seconds.")
+
+async def stream_mp3_generator(request: TTSRequest) -> AsyncGenerator[bytes, None]:
+    """Generate MP3 audio stream by collecting WAV chunks and converting to MP3."""
+    print("[stream_mp3_generator] Starting MP3 generation...")
+    
+    # Collect all WAV audio data first
+    wav_chunks = []
+    is_header = True
+    
+    async for audio_bytes in stream_audio_generator(request):
+        if is_header:
+            # Skip WAV header for MP3 conversion
+            is_header = False
+            continue
+        wav_chunks.append(audio_bytes)
+    
+    if not wav_chunks:
+        print("[stream_mp3_generator] No audio data to convert.")
+        return
+    
+    # Combine all WAV chunks
+    combined_audio = b''.join(wav_chunks)
+    
+    # Create a complete WAV file in memory
+    buffer = io.BytesIO()
+    with wave.open(buffer, 'wb') as wf:
+        wf.setnchannels(1)  # Mono
+        wf.setsampwidth(2)  # 16-bit
+        wf.setframerate(DEFAULT_SAMPLE_RATE)
+        wf.writeframes(combined_audio)
+    
+    wav_data = buffer.getvalue()
+    
+    # Convert to MP3
+    try:
+        mp3_data = convert_wav_to_mp3(wav_data, DEFAULT_SAMPLE_RATE)
+        print(f"[stream_mp3_generator] Converted {len(wav_data)} bytes WAV to {len(mp3_data)} bytes MP3")
+        yield mp3_data
+    except Exception as e:
+        print(f"[stream_mp3_generator] Error converting to MP3: {e}")
+        raise HTTPException(500, f"Error converting audio to MP3: {e}")
 
 async def process_and_cache_reference(file_path: str, text: Optional[str], ref_id: str):
     """Process a reference audio file in the background."""
@@ -411,31 +516,71 @@ async def tts_stream(request: TTSRequest):
 @api_router_v1.post("/audio/speech")
 async def generate_speech_openai(request_data: OpenAITTSRequest):
     """OpenAI-compatible TTS endpoint using F5TTS directly"""
-    if request_data.voice not in reference_cache:
-        raise HTTPException(400, f"Voice '{request_data.voice}' not found.")
-    
-    cached_ref_data = reference_cache[request_data.voice]
-    if cached_ref_data.get("loaded") != True:
-        raise HTTPException(503, f"Reference voice '{request_data.voice}' is not ready.")
+    try:
+        # Validate voice reference
+        if request_data.voice not in reference_cache:
+            available_voices = list(reference_cache.keys())
+            raise HTTPException(400, f"Voice '{request_data.voice}' not found. Available voices: {available_voices}")
+        
+        cached_ref_data = reference_cache[request_data.voice]
+        if cached_ref_data.get("loaded") != True:
+            status = cached_ref_data.get('loaded', 'Not Found')
+            error_msg = cached_ref_data.get('error', 'N/A')
+            error_detail = f"Reference voice '{request_data.voice}' is not ready. Status: {status}"
+            if status == 'processing':
+                error_detail += " Still processing, please wait."
+            elif error_msg != 'N/A':
+                error_detail += f" Error: {error_msg}"
+            raise HTTPException(503, error_detail)
 
-    f5tts_request = TTSRequest(text=request_data.input, speaker=request_data.voice)
-    
-    response_format = request_data.response_format.lower() if request_data.response_format else "wav"
-    
-    if response_format == "wav":
-        return StreamingResponse(stream_audio_generator(f5tts_request), media_type="audio/wav")
-    elif response_format == "pcm":
-        media_type = f"audio/L16;rate={DEFAULT_SAMPLE_RATE};channels=1"
-        async def pcm_gen():
-            is_header = True
-            async for audio_bytes in stream_audio_generator(f5tts_request):
-                if is_header:
-                    is_header = False
-                    continue
-                yield audio_bytes
-        return StreamingResponse(pcm_gen(), media_type=media_type)
-    else:
-        raise HTTPException(400, f"Unsupported response format: {response_format}")
+        # Create F5TTS request
+        f5tts_request = TTSRequest(text=request_data.input, speaker=request_data.voice)
+        
+        # Handle response format
+        response_format = request_data.response_format.lower() if request_data.response_format else "wav"
+        
+        if response_format == "wav":
+            headers = {
+                "Content-Type": "audio/wav",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive"
+            }
+            return StreamingResponse(
+                stream_audio_generator(f5tts_request), 
+                media_type="audio/wav",
+                headers=headers
+            )
+        elif response_format == "mp3":
+            headers = {
+                "Content-Type": "audio/mpeg",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive"
+            }
+            return StreamingResponse(
+                stream_mp3_generator(f5tts_request),
+                media_type="audio/mpeg",
+                headers=headers
+            )
+        elif response_format == "pcm":
+            media_type = f"audio/L16;rate={DEFAULT_SAMPLE_RATE};channels=1"
+            async def pcm_gen():
+                is_header = True
+                async for audio_bytes in stream_audio_generator(f5tts_request):
+                    if is_header:
+                        is_header = False
+                        continue
+                    yield audio_bytes
+            return StreamingResponse(pcm_gen(), media_type=media_type)
+        else:
+            raise HTTPException(400, f"Unsupported response format: {response_format}. Supported: wav, mp3, pcm")
+            
+    except HTTPException:
+        # Re-raise HTTPExceptions directly
+        raise
+    except Exception as e:
+        print(f"Unhandled error in /v1/audio/speech endpoint: {e}")
+        traceback.print_exc()
+        raise HTTPException(500, f"Internal server error generating audio: {str(e)}")
 
 
 @api_router_v1.post("/upload_reference")
