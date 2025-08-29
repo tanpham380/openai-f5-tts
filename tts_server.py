@@ -63,21 +63,6 @@ DEFAULT_REFERENCES = {
         "audio": "./ref_audios/default_vi.wav",
         "text": "./ref_audios/default_vi.txt",
         "name": "Default Vietnamese"
-    },
-    "default_zh": {
-        "audio": "./ref_audios/default_zh.wav",
-        "text": "./ref_audios/default_zh.txt",
-        "name": "Default Chinese"
-    },
-    "leijun": {
-        "audio": "./ref_audios/leijun.wav",
-        "text": "./ref_audios/leijun.txt",
-        "name": "Lei Jun"
-    },
-    "wukong": {
-        "audio": "./ref_audios/wukong.wav",
-        "text": "./ref_audios/wukong.txt",
-        "name": "Wukong"
     }
 }
 
@@ -267,12 +252,31 @@ async def model_context(ref_id: str):
             tts_model.ref_text = cached_ref_data["processed_text"]
             tts_model.ref_audio_len = cached_ref_data["processed_mel_len"]
             
-            # Ensure tensor device compatibility
+            # Ensure tensor device and dtype compatibility
             if tts_model.ref_audio_processed.device != tts_model.device:
                 print(f"Warning: Moving cached mel tensor from {tts_model.ref_audio_processed.device} to {tts_model.device}")
                 tts_model.ref_audio_processed = tts_model.ref_audio_processed.to(tts_model.device)
             
-            print(f"[Model Context] Set reference state for '{ref_id}'. Mel shape: {tts_model.ref_audio_processed.shape}")
+            # Force dtype consistency to avoid half/float mismatch errors
+            if hasattr(tts_model, 'model') and hasattr(tts_model.model, 'dtype'):
+                target_dtype = tts_model.model.dtype
+                if tts_model.ref_audio_processed.dtype != target_dtype:
+                    print(f"Warning: Converting mel tensor from {tts_model.ref_audio_processed.dtype} to {target_dtype}")
+                    tts_model.ref_audio_processed = tts_model.ref_audio_processed.to(dtype=target_dtype)
+            
+            # Ensure vocoder uses consistent dtype
+            if hasattr(tts_model, 'vocoder'):
+                # Force vocoder to use float32 to avoid dtype mismatches
+                for param in tts_model.vocoder.parameters():
+                    if param.dtype == torch.float16:
+                        param.data = param.data.float()
+                        
+                # Also handle buffers in vocoder
+                for name, buffer in tts_model.vocoder.named_buffers():
+                    if buffer.dtype == torch.float16:
+                        buffer.data = buffer.data.float()
+            
+            print(f"[Model Context] Set reference state for '{ref_id}'. Mel shape: {tts_model.ref_audio_processed.shape}, dtype: {tts_model.ref_audio_processed.dtype}")
             yield tts_model
         finally:
             # Always reset model state after use (like viF5TTS)
